@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import de.easygolfstats.R;
-import de.easygolfstats.file.RefRouteController;
+import de.easygolfstats.file.BagController;
 import de.easygolfstats.file.Settings;
 import de.easygolfstats.itemList.RefRoutesAdapter;
 import de.easygolfstats.log.Logger;
@@ -106,9 +106,8 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
                 refRoutes.add(newListIndex, newRefRoute);
                 rvRefRoutes.getAdapter().notifyItemInserted(newListIndex);
                 rvRefRoutes.getAdapter().notifyItemRangeChanged(listIndex, refRoutes.size());
-                RefRouteController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
+                BagController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
 
-                // if there are refroutes activate button
                 activateGoButton(refRoutes.size() > 0);
                 break;
 
@@ -123,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
                 refRoute.setRefRouteDescription(refRouteDescription);
                 refRoute.setRefRouteFileName(refRouteFileName);
                 rvRefRoutes.getAdapter().notifyItemChanged(listIndex);
-                RefRouteController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
+                BagController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
                 break;
 
             default:
@@ -135,18 +134,18 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     private void updateItemChecked(int listIndex) {
         RefRoute refRoute = refRoutes.get(listIndex);
         refRoute.setActive(!refRoute.isActive());
-        RefRouteController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
+        BagController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
     }
 
     private void updateItemRange() {
-        RefRouteController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
+        BagController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
     }
 
     private void deleteItem(int listIndex) {
         refRoutes.remove(listIndex);
         rvRefRoutes.getAdapter().notifyItemRemoved(listIndex);
         rvRefRoutes.getAdapter().notifyItemRangeChanged(listIndex, refRoutes.size());
-        RefRouteController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
+        BagController.writeRefRoutesToFile(routesFileDirectory, refRoutes);
         // Show user that he can start
         activateGoButton(refRoutes.size() > 0);
     }
@@ -292,8 +291,6 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     }
 
     private void reactToMessageButton() {
-        // showMessageButton is part of MTI
-        // MTI must be initialized before using the MessageButton
         if (!mtiInitialized) {
             return;
         }
@@ -305,39 +302,8 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     Called when a reference route was finished or cancelled or an exception was triggered
     This function has to decide what to do next; wait for user action or start the next route (if there are more routes to drive)
      */
-    private void routeFinished(ApiError callbackResult) {
-        logger.info("routeFinished", "callbackResult = " + callbackResult.name());
-
-        switch (callbackResult) {
-            // Last route was finished successfull
-            case OK:
-                // mark route as finished
-                markItemDone(refRouteManager.getLastRefRouteId());
-
-                // If all routes done finish by waiting for user interaction
-                Switch autoPilot = findViewById(R.id.switchAutopilot);
-                if (!refRouteManager.nextRefRouteExists()) {
-                    resetRouting();
-                    refRouteManager.reset();
-                    hideMapTrip(refRouteManager);
-                } else if (!autoPilot.isChecked()) {
-                    // AutoPilot OFF: hide MapTrip and make a pause
-                    pauseOnAutoPilotOff();
-                    hideMapTrip(refRouteManager);
-                } else {
-                    // AutoPilot ON: resume with next route
-                    routeRefRoute(false);
-                }
-                break;
-
-            // last route was canceled
-            case OPERATION_CANCELED:
-                markItemPaused(refRouteManager.getActiveRefRouteId());
-                break;
-
-            default:
-                showMessage("Fehler", "Route konnte nicht gestartet oder beendet werden: " + callbackResult.name());
-        }
+    private void routeFinished() {
+        logger.info("routeFinished", "callbackResult = ");
     }
 
     /*
@@ -424,9 +390,9 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         logger.finest("onCreate", "-->       New Instance        <--");
         logger.info("onCreate", "RefRoute App wird initialisiert");
         logger.config("onCreate", "Dateiverzeichnis: " + getExternalFilesDir(null).getAbsolutePath());
-        RefRouteController.initSequenceFile(routesFileDirectory);
+        BagController.initSequenceFile(routesFileDirectory);
 
-        refRoutes = RefRouteController.readRefRoutesFromFile(routesFileDirectory);
+        refRoutes = BagController.readRefRoutesFromFile(routesFileDirectory);
         // Create adapter passing in the sample user data
         final RefRoutesAdapter adapter = new RefRoutesAdapter(refRoutes, this);
 
@@ -638,12 +604,12 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
                 String className = MainActivity.this.getClass().getCanonicalName();
                 String packageName = getPackageName();
 
-                final ApiError result = refRouteManager.routeItem(packageName, className, routesFileDirectory, refRouteIndex, restartTour);
+                refRouteManager.routeItem(packageName, className, routesFileDirectory, refRouteIndex, restartTour);
                 // successfully routed, initialize next route
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        activity.routeFinished(result);
+                        activity.routeFinished();
                     }
                 });
             }
@@ -653,15 +619,8 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     }
 
 
-    private ApiError checkMapTripRunning(boolean startApp) {
-        ApiError findServerResult = refRouteManager.findServer();
-        if (ApiError.COULD_NOT_FIND_SERVER == findServerResult || ApiError.TIMEOUT == findServerResult) {
-            logger.info("initMti", "MapTrip not running, starting App");
-            if (startApp) {
-                startMapTrip();
-            }
-        }
-        return findServerResult;
+    private void checkMapTripRunning(boolean startApp) {
+
     }
 
 
@@ -682,10 +641,8 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
                 int retries = 0;
                 ApiError initMtiResult = ApiError.NOT_STARTED;
                 boolean innerStartApp = startMapTripRequested;
-                initMtiResult = refRouteManager.initMti(activity);
                 while (retries++ < 10 && ApiError.OK != initMtiResult) {
                     if (startMapTripRequested) {
-                        initMtiResult = checkMapTripRunning(innerStartApp);
                     }
                     try {
                         Thread.sleep(200);
@@ -693,7 +650,6 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
                         e.printStackTrace();
                     }
                     innerStartApp = false;
-                    initMtiResult = refRouteManager.initMti(activity);
                 }
 
                 final ApiError apiErrorInRunnable = initMtiResult;
