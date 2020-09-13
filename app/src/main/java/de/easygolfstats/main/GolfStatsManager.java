@@ -2,6 +2,7 @@ package de.easygolfstats.main;
 
 import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
+import de.easygolfstats.model.HitsPerClub;
 
 import java.util.ArrayList;
 
@@ -9,13 +10,13 @@ public class GolfStatsManager {
     private int lastRefRouteId = -1;
     private int activeRefRouteId = 0;
     private boolean isWorking = false;
-    private ArrayList<Club> clubs;
+    private ArrayList<HitsPerClub> hitsPerClubList;
 
     private Logger logger = Logger.createLogger("RefRouteManager");
 
 
-    public GolfStatsManager(ArrayList<Club> clubs) {
-        this.clubs = clubs;
+    public GolfStatsManager(ArrayList<HitsPerClub> hitsPerClubList) {
+        this.hitsPerClubList = hitsPerClubList;
     }
 
     public void reset() {
@@ -45,14 +46,14 @@ public class GolfStatsManager {
     }
 
     public boolean nextRefRouteExists() {
-        while (activeRefRouteId < clubs.size()) {
+        while (activeRefRouteId < hitsPerClubList.size()) {
                 return true;
         }
         return false;
     }
 
     public int getNextRefRouteId() {
-        while (activeRefRouteId < clubs.size()) {
+        while (activeRefRouteId < hitsPerClubList.size()) {
             activeRefRouteId++;
         }
         return activeRefRouteId;

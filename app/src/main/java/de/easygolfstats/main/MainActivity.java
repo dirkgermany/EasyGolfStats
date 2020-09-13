@@ -20,16 +20,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import de.easygolfstats.R;
 import de.easygolfstats.file.BagController;
+import de.easygolfstats.file.HitsPerClubController;
 import de.easygolfstats.file.Settings;
-import de.easygolfstats.itemList.HitAdapter;
+import de.easygolfstats.itemList.HitsPerClubAdapter;
 import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
 
 import java.util.ArrayList;
 
+import de.easygolfstats.model.HitsPerClub;
+import de.easygolfstats.types.ClubType;
 import de.infoware.android.mti.enums.ApiError;
 
-public class MainActivity extends AppCompatActivity implements RefRouteDialog.RefRouteDialogListener, HitAdapter.ItemClickListener {
+public class MainActivity extends AppCompatActivity implements ClubDialog.RefRouteDialogListener, HitsPerClubAdapter.ItemClickListener {
     private static final int CLUB_DIALOG_MODE_ADD = 1;
     private static final int CLUB_DIALOG_MODE_EDIT = 2;
     private boolean dialogIsActive = false;
@@ -48,8 +51,8 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     private static Thread mtiThread;
     private static Thread serverThread;
 
-    private ArrayList<Club> clubs;
-    private RecyclerView rvClubs;
+    private ArrayList<HitsPerClub> hitsPerClubList;
+    private RecyclerView rvHitsPerClub;
 
     private String fileDirectory;
     private boolean isRoundActive = false;
@@ -88,26 +91,27 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     /**
      * Callback when RefRouteDialog is finished with OK
      *
-     * @param refRouteName        Name edited by user
-     * @param refRouteDescription Description edited by user
+     * @param clubName        Name edited by user
+     * @param clubType Description edited by user
      * @param listIndex           Is equal to or greater than 0 if dialogMode is REFROUTE_DIALOG_MODE_EDIT;
      *                            is NULL or lower than 0 if dialogMode is REFROUTE_DIALOG_MODE_ADD.
      * @param dialogMode          Distinguishes between EDIT or ADD mode.
      */
     @Override
-    public void clubDialogOk(String refRouteName, String refRouteDescription, String refRouteFileName, Integer listIndex, int dialogMode) {
+    public void clubDialogOk(String clubName, ClubType clubType, Integer listIndex, int dialogMode) {
         // aware that listIndex can be -1 or null if dialogMode is to add - so ignore listIndex when adding an item
 
         switch (dialogMode) {
             case CLUB_DIALOG_MODE_ADD:
-                int newListIndex = clubs.size();
-                Club newClub = new Club(refRouteName, refRouteDescription, refRouteFileName, newListIndex, false);
-                clubs.add(newListIndex, newClub);
-                rvClubs.getAdapter().notifyItemInserted(newListIndex);
-                rvClubs.getAdapter().notifyItemRangeChanged(listIndex, clubs.size());
-                BagController.writeBagToFile(fileDirectory, clubs);
+                int newListIndex = hitsPerClubList.size();
+                Club newClub = new Club(clubName, clubType);
+                HitsPerClub hitsPerClub = new HitsPerClub( clubName,  0,  0,  0);
+//                hitsPerClubList.add(newListIndex, newClub);
+                rvHitsPerClub.getAdapter().notifyItemInserted(newListIndex);
+                rvHitsPerClub.getAdapter().notifyItemRangeChanged(listIndex, hitsPerClubList.size());
+//                BagController.writeBagToFile(fileDirectory, hitsPerClub);
 
-                activateGoButton(clubs.size() > 0);
+                activateGoButton(hitsPerClubList.size() > 0);
                 break;
 
             case CLUB_DIALOG_MODE_EDIT:
@@ -116,12 +120,11 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
                     return;
                 }
 
-                Club club = clubs.get(listIndex);
-                club.setClubName(refRouteName);
-                club.setRefRouteDescription(refRouteDescription);
-                club.setRefRouteFileName(refRouteFileName);
-                rvClubs.getAdapter().notifyItemChanged(listIndex);
-                BagController.writeBagToFile(fileDirectory, clubs);
+ //               Club club = hitsPerClub.get(listIndex);
+ //               club.setClubName(clubName);
+ //               club.setClubType(clubType);
+                rvHitsPerClub.getAdapter().notifyItemChanged(listIndex);
+//                BagController.writeBagToFile(fileDirectory, hitsPerClub);
                 break;
 
             default:
@@ -130,34 +133,33 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         dialogIsActive = false;
     }
 
-    private void updateItemChecked(int listIndex) {
-        Club club = clubs.get(listIndex);
-        club.setActive(!club.isActive());
-        BagController.writeBagToFile(fileDirectory, clubs);
+    private void calculateHits(int listIndex) {
+        HitsPerClub hits = hitsPerClubList.get(listIndex);
+
+
+        HitsPerClubController.writeHitsToFile(fileDirectory, hitsPerClubList);
     }
 
     private void updateItemRange() {
-        BagController.writeBagToFile(fileDirectory, clubs);
+ //       BagController.writeBagToFile(fileDirectory, hitsPerClubList);
     }
 
     private void deleteItem(int listIndex) {
-        clubs.remove(listIndex);
-        rvClubs.getAdapter().notifyItemRemoved(listIndex);
-        rvClubs.getAdapter().notifyItemRangeChanged(listIndex, clubs.size());
-        BagController.writeBagToFile(fileDirectory, clubs);
+        hitsPerClubList.remove(listIndex);
+        rvHitsPerClub.getAdapter().notifyItemRemoved(listIndex);
+        rvHitsPerClub.getAdapter().notifyItemRangeChanged(listIndex, hitsPerClubList.size());
+//        BagController.writeBagToFile(fileDirectory, hitsPerClubList);
         // Show user that he can start
-        activateGoButton(clubs.size() > 0);
+        activateGoButton(hitsPerClubList.size() > 0);
     }
 
     private void editItem(int listIndex) {
-        String refRouteName = clubs.get(listIndex).getClubName();
-        String refRouteDescription = clubs.get(listIndex).getRefRouteDescription();
-        String refRouteFileName = clubs.get(listIndex).getRefRouteFileName();
+        String clubName = hitsPerClubList.get(listIndex).getClubName();
+//        ClubType clubType = hitsPerClubList.get(listIndex).getClubType();
 
-        RefRouteDialog dialog = new RefRouteDialog();
-        dialog.setRefRouteName(refRouteName);
-        dialog.setRefRouteDescription(refRouteDescription);
-        dialog.setRefRouteFileName(refRouteFileName);
+        ClubDialog dialog = new ClubDialog();
+        dialog.setClubName(clubName);
+//        dialog.setClubType(clubType);
         dialog.setListIndex(listIndex);
         dialog.setDialogMode(CLUB_DIALOG_MODE_EDIT);
 
@@ -172,19 +174,19 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
             return;
         }
 
-        RefRouteDialog dialog = new RefRouteDialog();
+        ClubDialog dialog = new ClubDialog();
         dialog.setDialogMode(CLUB_DIALOG_MODE_ADD);
         dialog.show(getSupportFragmentManager(), "Referenzroute hinzufügen");
     }
 
     public boolean changeItems(int oldPos, int newPos) {
-        Club itemMoveToPosOld = clubs.get(newPos);
-        Club itemMoveToPosNew = clubs.get(oldPos);
-        clubs.set(newPos, itemMoveToPosNew);
-        clubs.set(oldPos, itemMoveToPosOld);
+        HitsPerClub itemMoveToPosOld = hitsPerClubList.get(newPos);
+        HitsPerClub itemMoveToPosNew = hitsPerClubList.get(oldPos);
+        hitsPerClubList.set(newPos, itemMoveToPosNew);
+        hitsPerClubList.set(oldPos, itemMoveToPosOld);
 
-        rvClubs.getAdapter().notifyItemChanged(newPos);
-        rvClubs.getAdapter().notifyItemChanged(oldPos);
+        rvHitsPerClub.getAdapter().notifyItemChanged(newPos);
+        rvHitsPerClub.getAdapter().notifyItemChanged(oldPos);
 
         updateItemRange();
 
@@ -202,19 +204,19 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
     public void itemClicked(View view, int listIndex) {
         int viewId = view.getId();
         switch (viewId) {
-            case R.id.itemCheckBox:
+            case R.id.itemButtonSave:
                 // Eintrag in Datei updaten
-                updateItemChecked(listIndex);
+                calculateHits(listIndex);
                 break;
 
-            case R.id.itemRefRouteName:
-                // Click on item text
-                editItem(listIndex);
-                break;
-
-            case R.id.itemDeleteButton:
-                deleteItem(listIndex);
-                break;
+//            case R.id.itemRefRouteName:
+//                // Click on item text
+//                editItem(listIndex);
+//                break;
+//
+//            case R.id.itemDeleteButton:
+//                deleteItem(listIndex);
+//                break;
             default:
         }
     }
@@ -313,7 +315,6 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
             logger.finest("routeRefRoute", "one more reference route exists; routeItem");
             int nextRefRouteId = golfStatsManager.getNextRefRouteId();
             markItemInWork(nextRefRouteId);
-            routeItem(this, this.golfStatsManager, nextRefRouteId, restartTour);
         } else {
             logger.finest("routeRefRoute", "no more reference route exists; resetRouting, mtiCalls.reset");
             resetRouting();
@@ -356,20 +357,20 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         // Set BackgroundDrawable
         actionBar.setBackgroundDrawable(colorDrawable);
 
-        setTitle("Reference Routes");
+        setTitle("Easy Golf Stats");
 
         actionBar.setDisplayShowHomeEnabled(true);
         actionBar.setDisplayUseLogoEnabled(true);
-        actionBar.setTitle("Reference Routes");
-        actionBar.setLogo(R.drawable.logo_maptrip_refroutes_148);
+        actionBar.setTitle("Easy Golf Stats");
+        actionBar.setLogo(R.drawable.titel_egs_simple);
 
         // Search instance of RecyclerView
-        rvClubs = (RecyclerView) findViewById(R.id.recyclerViewRefRoutes);
+        rvHitsPerClub = (RecyclerView) findViewById(R.id.recyclerViewRefRoutes);
 
         String basePath = getExternalFilesDir(null).getAbsolutePath();
 
         // Initialize reference routes list
-        fileDirectory = basePath + "/routes";
+        fileDirectory = basePath + "/data";
 
         // Prepare Logger
         // Basic path of files - here should be stored the loggers property file (if used)
@@ -380,14 +381,12 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         logger.finest("onCreate", "-->       New Instance        <--");
         logger.info("onCreate", "RefRoute App wird initialisiert");
         logger.config("onCreate", "Dateiverzeichnis: " + getExternalFilesDir(null).getAbsolutePath());
-        BagController.initSequenceFile(fileDirectory);
 
-        clubs = BagController.readBagFromFile(fileDirectory);
-        // Create adapter passing in the sample user data
-        final HitAdapter adapter = new HitAdapter(clubs, this);
+        hitsPerClubList = HitsPerClubController.readHitsFromFile(fileDirectory);
+        final HitsPerClubAdapter adapter = new HitsPerClubAdapter(hitsPerClubList, this);
 
         // Attach the adapter to the recyclerview to populate items
-        rvClubs.setAdapter(adapter);
+        rvHitsPerClub.setAdapter(adapter);
 
         // SWIPE and MOVE
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback =
@@ -408,80 +407,23 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
                     }
                 };
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-        itemTouchHelper.attachToRecyclerView(rvClubs);
+        itemTouchHelper.attachToRecyclerView(rvHitsPerClub);
 
         // Set layout manager to position the items
         // LinearLayoutManager for usage of dividers
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        rvClubs.setLayoutManager(new LinearLayoutManager(this));
+        rvHitsPerClub.setLayoutManager(new LinearLayoutManager(this));
 
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(rvClubs.getContext(),
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(rvHitsPerClub.getContext(),
                 layoutManager.getOrientation());
-        rvClubs.addItemDecoration(dividerItemDecoration);
+        rvHitsPerClub.addItemDecoration(dividerItemDecoration);
 
         Settings settings = new Settings(basePath + "/refroutechains.properties");
         // init worker
-        golfStatsManager = new GolfStatsManager(clubs);
+        golfStatsManager = new GolfStatsManager(hitsPerClubList);
 
-        initMti(this, golfStatsManager, settings.getValue("startMapTrip", Boolean.TRUE));
     }
 
-    /**
-     * Reacts to MTI Initialization.
-     *
-     * @param apiError If ApiError.OK MTI is initialized and the user can use routes. Otherwise the GO Button keeps disabled.
-     */
-    private void mtiInitFinished(ApiError apiError) {
-        switch (apiError) {
-            case OK:
-                // Bring App to front
-                hideMapTrip(golfStatsManager);
-
-                // Show user that he can start
-                activateGoButton(clubs.size() > 0);
-                mtiInitialized = true;
-                break;
-
-            default:
-                String apiErrorName = apiError.name();
-                logger.warn("waitForMtiInit", "waitForMtiInit Error in initialisation: " + apiErrorName);
-                Toast.makeText(this, "Fehler bei Initialisierung: " + apiErrorName, Toast.LENGTH_LONG);
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-        }
-    }
-
-    private void setMapTripToFront() {
-        golfStatsManager.showMessageButton();
-        logger.fine("setMapTripToFront", "bring MapTrip Companion to front as " + mapTripCompanionActivityClass);
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName(mapTripAppSystemName, mapTripCompanionActivityClass));
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-    }
-
-    private boolean startMapTrip() {
-        logger.info("startMapTrip", "Launching MapTrip as: " + mapTripAppSystemName);
-        Intent intent = getPackageManager().getLaunchIntentForPackage(mapTripAppSystemName);
-        if (null == intent) {
-            logger.warn("startMapTrip", "Intent is NULL: getPackageManager().getLaunchIntentForPackage(mapTripAppSystemName) failed.");
-        }
-
-        try {
-            startActivity(intent);
-            return true;
-        } catch (ActivityNotFoundException eToo) {
-            logger.severe("startMapTrip", "MapTrip could not be started. SystemName =  " + mapTripAppSystemName + ";" + eToo.getMessage());
-            Toast.makeText(this, "Maptrip konnte nicht gestartet werden", Toast.LENGTH_LONG);
-        } catch (Exception ex) {
-            logger.severe("startMapTrip", "MapTrip could not be started. SystemName =  " + mapTripAppSystemName + ";" + ex.getMessage());
-            Toast.makeText(this, "Maptrip konnte nicht gestartet werden", Toast.LENGTH_LONG);
-        }
-        return false;
-    }
 
     // ======================================================================================================
     // GUI elements manipulation
@@ -489,9 +431,9 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
     private void markItemPaused(int refRouteId) {
         try {
-            RecyclerView.ViewHolder holder = rvClubs.findViewHolderForAdapterPosition(refRouteId);
+            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(refRouteId);
             holder.itemView.setBackgroundColor(Color.parseColor(MARK_COLOR_PAUSED));
-            holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_PAUSED));
+ //           holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_PAUSED));
             holder.itemView.refreshDrawableState();
         } catch (Exception e) {
             logger.warn("markItemPause", "Fehler bei markItemPaused: " + e.getMessage());
@@ -500,9 +442,9 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
     private void markItemDone(int refRouteId) {
         try {
-            RecyclerView.ViewHolder holder = rvClubs.findViewHolderForAdapterPosition(refRouteId);
+            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(refRouteId);
             holder.itemView.setBackgroundColor(Color.parseColor(MARK_COLOR_ROUTE_DONE));
-            holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_ROUTE_DONE));
+ //           holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_ROUTE_DONE));
             holder.itemView.refreshDrawableState();
         } catch (Exception e) {
             logger.warn("markItemDone", "Fehler bei markItemDone: " + e.getMessage());
@@ -511,9 +453,9 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
     private void markItemNotDone(int refRouteId) {
         try {
-            RecyclerView.ViewHolder holder = rvClubs.findViewHolderForAdapterPosition(refRouteId);
+            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(refRouteId);
             holder.itemView.setBackgroundColor(Color.parseColor(MARK_COLOR_NOT_DONE));
-            holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_NOT_DONE));
+ //           holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_NOT_DONE));
             holder.itemView.refreshDrawableState();
         } catch (Exception e) {
             logger.warn("markItemNotDone", "Fehler bei markItemNotDone: " + e.getMessage());
@@ -522,9 +464,9 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
 
     private void markItemInWork(final int refRouteId) {
         try {
-            RecyclerView.ViewHolder holder = rvClubs.findViewHolderForAdapterPosition(refRouteId);
+            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(refRouteId);
             holder.itemView.setBackgroundColor(Color.parseColor(MARK_COLOR_IN_WORK));
-            holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_IN_WORK));
+//            holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_IN_WORK));
             holder.itemView.refreshDrawableState();
         } catch (Exception e) {
             logger.warn("markItemInWork", "Fehler bei markItemInWork: " + e.getMessage());
@@ -535,16 +477,8 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
      * Unmark list items
      */
     private void refreshAllItems() {
-        for (int i = 0; i < clubs.size(); i++) {
+        for (int i = 0; i < hitsPerClubList.size(); i++) {
             markItemNotDone(i);
-        }
-    }
-
-    private void resetItemWorkingStates() {
-        for (int i = 0; i < clubs.size(); i++) {
-            if (clubs.get(i).isFinished()) {
-                markItemDone(i);
-            }
         }
     }
 
@@ -577,81 +511,4 @@ public class MainActivity extends AppCompatActivity implements RefRouteDialog.Re
         serverThread.start();
     }
 
-
-    /*
-     * Starts routing of one reference routing file.
-     *
-     * @param activity      This activity
-     * @param workerService Instance of the worker service
-     * @param refRouteIndex Index of the route. Used to get the required informations which are stored in an array.
-     */
-    private void routeItem(final MainActivity activity, final GolfStatsManager golfStatsManager, final int refRouteIndex, final boolean restartTour) {
-        routingThread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                Thread.currentThread().setName("RoutingThread");
-                String className = MainActivity.this.getClass().getCanonicalName();
-                String packageName = getPackageName();
-
-                golfStatsManager.routeItem(packageName, className, fileDirectory, refRouteIndex, restartTour);
-                // successfully routed, initialize next route
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        activity.routeFinished();
-                    }
-                });
-            }
-        });
-        routingThread.start();
-        setMapTripToFront();
-    }
-
-
-    private void checkMapTripRunning(boolean startApp) {
-
-    }
-
-
-    /*
-    Initialize MTI
-     */
-    private void initMti(final MainActivity activity, final GolfStatsManager golfStatsManager, final boolean startMapTripRequested) {
-        logger.info("initMti", "Initializing MTI");
-
-        if (mtiInitialized) {
-            return;
-        }
-        mtiThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("MtiInitThread");
-
-                int retries = 0;
-                ApiError initMtiResult = ApiError.NOT_STARTED;
-                boolean innerStartApp = startMapTripRequested;
-                while (retries++ < 10 && ApiError.OK != initMtiResult) {
-                    if (startMapTripRequested) {
-                    }
-                    try {
-                        Thread.sleep(200);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    innerStartApp = false;
-                }
-
-                final ApiError apiErrorInRunnable = initMtiResult;
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        activity.mtiInitFinished(apiErrorInRunnable);
-                    }
-                });
-
-            }
-        });
-        mtiThread.start();
-    }
 }

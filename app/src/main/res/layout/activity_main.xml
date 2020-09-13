@@ -19,31 +19,72 @@
         app:layout_constraintBottom_toTopOf="@+id/buttonGo"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/switchAutopilot" />
+        app:layout_constraintTop_toBottomOf="@+id/radioGroupHitCategory" />
 
     <Button
         android:id="@+id/buttonGo"
-        android:layout_width="165dp"
-        android:layout_height="62dp"
+        android:layout_width="111dp"
+        android:layout_height="45dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:foregroundTint="#673AB7"
         android:onClick="startOrStopRouting"
-        android:text="GO"
+        android:text="NEW"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <Switch
-        android:id="@+id/switchAutopilot"
-        android:layout_width="140dp"
-        android:layout_height="19dp"
-        android:layout_marginStart="291dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
-        android:text="Autopilot"
+    <RadioGroup
+        android:id="@+id/radioGroupHitCategory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <RadioButton
+            android:id="@+id/radioButtonRegular"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checked="true"
+            android:text="Regular" />
+
+        <RadioButton
+            android:id="@+id/radioButtonPitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Pitch" />
+
+        <RadioButton
+            android:id="@+id/radioButtonChip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Chip" />
+
+        <RadioButton
+            android:id="@+id/radioButtonBunker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bunker" />
+
+    </RadioGroup>
+
+    <Switch
+        android:id="@+id/switchRound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="Runde"
+        android:textOff="Turnier"
+        android:textOn="Training"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

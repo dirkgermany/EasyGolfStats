@@ -13,38 +13,28 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDialogFragment;
 
 import de.easygolfstats.R;
+import de.easygolfstats.types.ClubType;
 
 /**
- * Dialog for renaming or
+ * Dialog for renaming or adding clubs
  */
-public class RefRouteDialog extends AppCompatDialogFragment {
+public class ClubDialog extends AppCompatDialogFragment {
 
-    private String refRouteName;
-    private String refRouteDescription;
-    private String refRouteFileName;
+    private String clubName;
+    private ClubType clubType;
     private Integer listIndex = -1;
     private int dialogMode;
 
-    private EditText refRouteNameEditText;
-    private EditText refRouteDescriptionEditText;
-    private EditText refRouteFileNameEditText;
+    private EditText clubNameEditText;
+    private EditText clubTypeEditText;
     private RefRouteDialogListener dialogListener;
-    private String dialogDescription = "Title not set";
 
-    public void setDialogDescription (String dialogDescription) {
-        this.dialogDescription = dialogDescription;
+    public void setClubName (String clubName) {
+        this.clubName = clubName;
     }
 
-    public void setRefRouteName (String refRouteName) {
-        this.refRouteName = refRouteName;
-    }
-
-    public void setRefRouteDescription (String refRouteDescription) {
-        this.refRouteDescription = refRouteDescription;
-    }
-
-    public void setRefRouteFileName (String refRouteFileName) {
-        this.refRouteFileName = refRouteFileName;
+    public void setClubType (ClubType clubType) {
+        this.clubType = clubType;
     }
 
     public void setDialogMode (int dialogMode) {
@@ -73,26 +63,22 @@ public class RefRouteDialog extends AppCompatDialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         // OK, Werte verarbeiten
-                        String refRouteName = refRouteNameEditText.getText().toString();
-                        String refRouteDescription = refRouteDescriptionEditText.getText().toString();
-                        String refRouteFileName = refRouteFileNameEditText.getText().toString();
-                        dialogListener.clubDialogOk(refRouteName, refRouteDescription, refRouteFileName, listIndex, dialogMode);
+                        String clubName = clubNameEditText.getText().toString();
+                        ClubType clubType = ClubType.valueOf(clubTypeEditText.getText().toString());
+                        dialogListener.clubDialogOk(clubName, clubType, listIndex, dialogMode);
                     }
                 });
 
-        refRouteNameEditText = view.findViewById(R.id.addRefRouteName);
-        refRouteDescriptionEditText = view.findViewById(R.id.addRefRouteDescription);
-        refRouteFileNameEditText = view.findViewById(R.id.addRefRouteFileName);
+        clubNameEditText = view.findViewById(R.id.addRefRouteName);
+        clubTypeEditText = view.findViewById(R.id.addRefRouteDescription);
 
-        if (this.refRouteName != null && this.refRouteName.length() > 0) {
-            refRouteNameEditText.setText(this.refRouteName);
+        if (this.clubName != null && this.clubName.length() > 0) {
+            clubNameEditText.setText(this.clubName);
         }
-        if (this.refRouteDescription != null && this.refRouteDescription.length() > 0) {
-            refRouteDescriptionEditText.setText(this.refRouteDescription);
+        if (this.clubType != null ) {
+            clubTypeEditText.setText(this.clubType.toString());
         }
-        if (this.refRouteFileName != null && this.refRouteFileName.length() > 0) {
-            refRouteFileNameEditText.setText(this.refRouteFileName);
-        }
+
         return builder.create();
     }
 
@@ -112,13 +98,12 @@ public class RefRouteDialog extends AppCompatDialogFragment {
     public interface RefRouteDialogListener {
         /**
          * Delivers the values of RefRouteName and RefRouteDescription
-         * @param refRouteName
-         * @param refRouteDescription
-         * @param refRouteFileName
+         * @param clubName
+         * @param clubType
          * @param listIndex
          * @param dialogMode
          */
-        void clubDialogOk(String refRouteName, String refRouteDescription, String refRouteFileName, Integer listIndex, int dialogMode);
+        void clubDialogOk(String clubName, ClubType clubType, Integer listIndex, int dialogMode);
         void clubDialogCancel();
     }
 
