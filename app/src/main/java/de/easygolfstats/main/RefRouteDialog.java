@@ -66,7 +66,7 @@ public class RefRouteDialog extends AppCompatDialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         // Cancel, nothing to do
-                        dialogListener.refRouteDialogCancel();
+                        dialogListener.clubDialogCancel();
                     }
                 })
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -76,7 +76,7 @@ public class RefRouteDialog extends AppCompatDialogFragment {
                         String refRouteName = refRouteNameEditText.getText().toString();
                         String refRouteDescription = refRouteDescriptionEditText.getText().toString();
                         String refRouteFileName = refRouteFileNameEditText.getText().toString();
-                        dialogListener.refRouteDialogOk(refRouteName, refRouteDescription, refRouteFileName, listIndex, dialogMode);
+                        dialogListener.clubDialogOk(refRouteName, refRouteDescription, refRouteFileName, listIndex, dialogMode);
                     }
                 });
 
@@ -118,8 +118,8 @@ public class RefRouteDialog extends AppCompatDialogFragment {
          * @param listIndex
          * @param dialogMode
          */
-        void refRouteDialogOk(String refRouteName, String refRouteDescription, String refRouteFileName, Integer listIndex, int dialogMode);
-        void refRouteDialogCancel();
+        void clubDialogOk(String refRouteName, String refRouteDescription, String refRouteFileName, Integer listIndex, int dialogMode);
+        void clubDialogCancel();
     }
 
 }

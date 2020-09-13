@@ -1,23 +1,21 @@
 package de.easygolfstats.main;
 
-import android.content.Context;
 import de.easygolfstats.log.Logger;
-import de.easygolfstats.model.RefRoute;
+import de.easygolfstats.model.Club;
 
 import java.util.ArrayList;
 
-public class RefRouteManager {
+public class GolfStatsManager {
     private int lastRefRouteId = -1;
     private int activeRefRouteId = 0;
     private boolean isWorking = false;
-    private ArrayList<RefRoute> refRoutes;
-    private int startReferenceId = -1;
+    private ArrayList<Club> clubs;
 
     private Logger logger = Logger.createLogger("RefRouteManager");
 
 
-    public RefRouteManager(ArrayList<RefRoute> refRoutes) {
-        this.refRoutes = refRoutes;
+    public GolfStatsManager(ArrayList<Club> clubs) {
+        this.clubs = clubs;
     }
 
     public void reset() {
@@ -47,20 +45,14 @@ public class RefRouteManager {
     }
 
     public boolean nextRefRouteExists() {
-        while (activeRefRouteId < refRoutes.size()) {
-            if (refRoutes.get(activeRefRouteId).isActive()) {
+        while (activeRefRouteId < clubs.size()) {
                 return true;
-            }
-            ++activeRefRouteId;
         }
         return false;
     }
 
     public int getNextRefRouteId() {
-        while (activeRefRouteId < refRoutes.size()) {
-            if (refRoutes.get(activeRefRouteId).isActive()) {
-                break;
-            }
+        while (activeRefRouteId < clubs.size()) {
             activeRefRouteId++;
         }
         return activeRefRouteId;
@@ -74,12 +66,6 @@ public class RefRouteManager {
      * Start routing a reference route
      */
     public void routeItem(String packageName, String className, String routesPath, Integer routeId, boolean restartTour) {
-    }
-
-    public void initMti(Context context) {
-    }
-
-    public void findServer() {
     }
 
     public void showApp(String packageName, String className) {
