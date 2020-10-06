@@ -1,5 +1,6 @@
 package de.easygolfstats.main;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -26,6 +27,7 @@ import de.easygolfstats.itemList.HitsPerClubAdapter;
 import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import de.easygolfstats.model.HitsPerClub;
@@ -42,13 +44,8 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     private static final String MARK_COLOR_NOT_DONE = "#FFFFFF";
     private static final String MARK_COLOR_IN_WORK = "#BD1550";
     private static final String MARK_COLOR_PAUSED = "#E97F02";
-    public static final String mapTripAppSystemName = "de.infoware.maptrip.navi.license";
-    public static final String mapTripCompanionActivityClass = "de.infoware.maptrip.CompanionActivity";
 
     private static MainActivity mainActivity;
-
-    private static Thread routingThread;
-    private static Thread mtiThread;
     private static Thread serverThread;
 
     private ArrayList<HitsPerClub> hitsPerClubList;
@@ -58,7 +55,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     private boolean isRoundActive = false;
     private boolean isPaused = false;
     private boolean pauseButtonWasClicked = false;
-    private boolean mtiInitialized = false;
 
     private GolfStatsManager golfStatsManager;
     private Logger logger;
@@ -133,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         dialogIsActive = false;
     }
 
-    private void calculateHits(int listIndex) {
+    private void calculateHits(int listIndex, int val) {
         HitsPerClub hits = hitsPerClubList.get(listIndex);
 
 
@@ -204,19 +200,19 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     public void itemClicked(View view, int listIndex) {
         int viewId = view.getId();
         switch (viewId) {
-            case R.id.itemButtonSave:
+            case R.id.button_positive:
                 // Eintrag in Datei updaten
-                calculateHits(listIndex);
+                calculateHits(listIndex, 1);
                 break;
 
-//            case R.id.itemRefRouteName:
-//                // Click on item text
-//                editItem(listIndex);
-//                break;
-//
-//            case R.id.itemDeleteButton:
-//                deleteItem(listIndex);
-//                break;
+            case R.id.button_neutral:
+                // Click on item text
+                calculateHits(listIndex, 0);
+                break;
+
+            case R.id.button_negative:
+                calculateHits(listIndex, -1);
+                break;
             default:
         }
     }
@@ -343,6 +339,7 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     /**
      * To keep the switch from MapTrip to this view simple, this App is a singleTask (see Manifest)
      */
+    @SuppressLint("WrongThread")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // Lookup the recyclerview in activity layout
@@ -379,9 +376,15 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         logger = Logger.createLogger("MainActivity");
 
         logger.finest("onCreate", "-->       New Instance        <--");
-        logger.info("onCreate", "RefRoute App wird initialisiert");
-        logger.config("onCreate", "Dateiverzeichnis: " + getExternalFilesDir(null).getAbsolutePath());
+        logger.info("onCreate", "EasyGolfStats App wird initialisiert");
+        logger.config("onCreate", "Basisverzeichnis: " + basePath);
+        logger.config("onCreate", "Datenverzeichnis: " + fileDirectory);
 
+        HitsPerClubController.initDataDirectory(basePath, "data");
+        if (!HitsPerClubController.isStatisticOpen(fileDirectory)) {
+            ArrayList<Club> clubs = ClubManager.getClubList(fileDirectory);
+            HitsPerClubController.initHitFile(fileDirectory, clubs);
+        }
         hitsPerClubList = HitsPerClubController.readHitsFromFile(fileDirectory);
         final HitsPerClubAdapter adapter = new HitsPerClubAdapter(hitsPerClubList, this);
 
@@ -418,7 +421,7 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
                 layoutManager.getOrientation());
         rvHitsPerClub.addItemDecoration(dividerItemDecoration);
 
-        Settings settings = new Settings(basePath + "/refroutechains.properties");
+        Settings settings = new Settings(basePath + "/app.properties");
         // init worker
         golfStatsManager = new GolfStatsManager(hitsPerClubList);
 
