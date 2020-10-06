@@ -27,7 +27,7 @@
     <Button
         android:id="@+id/button_positive"
         style="@style/Widget.AppCompat.Button.Small"
-        android:layout_width="35dp"
+        android:layout_width="60dp"
         android:layout_height="37dp"
         android:layout_weight="1"
         android:backgroundTint="#8BC34A"
@@ -36,7 +36,7 @@
     <Button
         android:id="@+id/button_neutral"
         style="@style/Widget.AppCompat.Button.Small"
-        android:layout_width="35dp"
+        android:layout_width="60dp"
         android:layout_height="37dp"
         android:layout_weight="1"
         android:backgroundTint="#EFDADA"
@@ -45,7 +45,7 @@
     <Button
         android:id="@+id/button_negative"
         style="@style/Widget.AppCompat.Button.Small"
-        android:layout_width="35dp"
+        android:layout_width="60dp"
         android:layout_height="37dp"
         android:layout_weight="1"
         android:backgroundTint="#FF5722"

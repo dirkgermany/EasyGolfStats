@@ -28,9 +28,6 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
         public Button buttonPositive;
         public Button buttonNeutral;
         public Button buttonNegative;
-//        public ImageButton addButton;
-//        public RadioGroup hitCategoryRadioGroup;
-//        public RadioButton selectedRadioButton;
 
         public ViewHolder (View itemView) {
             super (itemView);
@@ -39,12 +36,6 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
             buttonNegative = (Button) itemView.findViewById(R.id.button_negative);
             buttonNeutral = (Button) itemView.findViewById(R.id.button_neutral);
             buttonPositive = (Button) itemView.findViewById(R.id.button_positive);
-//            hitCategoryRadioGroup = (RadioGroup) itemView.findViewById(R.id.radioGroupResultButton);
-//            int selectedRadioButtonId = ((RadioGroup) itemView.findViewById(R.id.radioGroupResultButton)).getCheckedRadioButtonId();
-//            if (selectedRadioButtonId != -1) {
-//                selectedRadioButton = itemView.findViewById(selectedRadioButtonId);
-//            }
-//            addButton = (ImageButton) itemView.findViewById((R.id.itemButtonSave));
         }
     }
 
@@ -80,8 +71,6 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
         Button buttonNeutral = viewHolder.buttonNeutral;
         Button buttonPositive = viewHolder.buttonPositive;
         Button buttonNegative = viewHolder.buttonNegative;
-//        RadioButton selectedRadioButton = viewHolder.selectedRadioButton;
-//        selectedRadioButton.setChecked(true);
 
         View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
@@ -94,9 +83,6 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
         buttonNegative.setOnClickListener(onClickListener);
         buttonNeutral.setOnClickListener(onClickListener);
         buttonPositive.setOnClickListener(onClickListener);
-
-//        radioGroup.setOnClickListener(onClickListener);
-//        addButton.setOnClickListener(onClickListener);
     }
 
     public interface ItemClickListener {
