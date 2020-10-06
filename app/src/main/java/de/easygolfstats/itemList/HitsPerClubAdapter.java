@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -24,20 +25,26 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
     public class ViewHolder extends RecyclerView.ViewHolder {
         public TextView clubNameTextView;
         public TextView positiveCounter;
-        public ImageButton addButton;
-        public RadioGroup hitCategoryRadioGroup;
-        public RadioButton selectedRadioButton;
+        public Button buttonPositive;
+        public Button buttonNeutral;
+        public Button buttonNegative;
+//        public ImageButton addButton;
+//        public RadioGroup hitCategoryRadioGroup;
+//        public RadioButton selectedRadioButton;
 
         public ViewHolder (View itemView) {
             super (itemView);
             clubNameTextView = (TextView) itemView.findViewById(R.id.itemClubName);
-            positiveCounter = (TextView) itemView.findViewById((R.id.itemCountText));
-            hitCategoryRadioGroup = (RadioGroup) itemView.findViewById(R.id.radioGroupHitCategory);
-            int selectedRadioButtonId = ((RadioGroup) itemView.findViewById(R.id.radioGroupHitCategory)).getCheckedRadioButtonId();
-            if (selectedRadioButtonId != -1) {
-                selectedRadioButton = itemView.findViewById(selectedRadioButtonId);
-            }
-            addButton = (ImageButton) itemView.findViewById((R.id.itemButtonSave));
+            positiveCounter = (TextView) itemView.findViewById(R.id.itemCountText);
+            buttonNegative = (Button) itemView.findViewById(R.id.button_negative);
+            buttonNeutral = (Button) itemView.findViewById(R.id.button_neutral);
+            buttonPositive = (Button) itemView.findViewById(R.id.button_positive);
+//            hitCategoryRadioGroup = (RadioGroup) itemView.findViewById(R.id.radioGroupResultButton);
+//            int selectedRadioButtonId = ((RadioGroup) itemView.findViewById(R.id.radioGroupResultButton)).getCheckedRadioButtonId();
+//            if (selectedRadioButtonId != -1) {
+//                selectedRadioButton = itemView.findViewById(selectedRadioButtonId);
+//            }
+//            addButton = (ImageButton) itemView.findViewById((R.id.itemButtonSave));
         }
     }
 
@@ -52,7 +59,7 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
         LayoutInflater inflater = LayoutInflater.from(context);
 
         // Inflate the custom layout
-        View refRouteView = inflater.inflate(R.layout.item_refroute, parent, false);
+        View refRouteView = inflater.inflate(R.layout.item_hits, parent, false);
 
         // Return a new holder instance
         ViewHolder viewHolder = new ViewHolder(refRouteView);
@@ -69,11 +76,12 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
         TextView clubNameTextView = viewHolder.clubNameTextView;
         TextView positiveCounter = viewHolder.positiveCounter;
         clubNameTextView.setText(hitsPerClub.getClubName());
-        positiveCounter.setText((hitsPerClub.getHitsPositiveCalculated()));
-        RadioButton selectedRadioButton = viewHolder.selectedRadioButton;
-        selectedRadioButton.setChecked(true);
-        ImageButton addButton = viewHolder.addButton;
-        RadioGroup radioGroup = viewHolder.hitCategoryRadioGroup;
+        positiveCounter.setText(String.valueOf(hitsPerClub.getHitsPositiveCalculated()));
+        Button buttonNeutral = viewHolder.buttonNeutral;
+        Button buttonPositive = viewHolder.buttonPositive;
+        Button buttonNegative = viewHolder.buttonNegative;
+//        RadioButton selectedRadioButton = viewHolder.selectedRadioButton;
+//        selectedRadioButton.setChecked(true);
 
         View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
@@ -83,8 +91,12 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
         };
         clubNameTextView.setOnClickListener(onClickListener);
         positiveCounter.setOnClickListener(onClickListener);
-        radioGroup.setOnClickListener(onClickListener);
-        addButton.setOnClickListener(onClickListener);
+        buttonNegative.setOnClickListener(onClickListener);
+        buttonNeutral.setOnClickListener(onClickListener);
+        buttonPositive.setOnClickListener(onClickListener);
+
+//        radioGroup.setOnClickListener(onClickListener);
+//        addButton.setOnClickListener(onClickListener);
     }
 
     public interface ItemClickListener {

@@ -17,6 +17,26 @@ import java.util.List;
  */
 public class CsvFile {
 
+    public static void createDirectory(String baseDirectory, String subDirectory) {
+        File destDir = new File (baseDirectory + "/" + subDirectory);
+        if (!destDir.exists()) {
+            destDir.mkdir();
+        }
+    }
+
+    public static void renameFile (String fileDirectory, String oldFileName, String newFileName) {
+        // replace
+        File oldFile = new File(fileDirectory + "/" + oldFileName);
+        if (oldFile.exists()) {
+            File newFile = new File(fileDirectory + "/" + newFileName);
+            oldFile.renameTo(newFile);
+        }
+    }
+
+    public static boolean fileExists(String fileDirectory, String fileName) {
+        return new File(fileDirectory + "/" + fileName).exists();
+    }
+
     /**
      * Delivers the lines of a CSV file as a List of String-Arrays ([]).
      * The size resp. length of the Strings[] can vary between every line.
@@ -71,7 +91,6 @@ public class CsvFile {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     /* Creates a buffer for reading file
