@@ -2,14 +2,12 @@ package de.easygolfstats.main;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
-import android.content.ComponentName;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
@@ -19,6 +17,8 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
+
 import de.easygolfstats.R;
 import de.easygolfstats.file.BagController;
 import de.easygolfstats.file.HitsPerClubController;
@@ -26,13 +26,8 @@ import de.easygolfstats.file.Settings;
 import de.easygolfstats.itemList.HitsPerClubAdapter;
 import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
-
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-
 import de.easygolfstats.model.HitsPerClub;
 import de.easygolfstats.types.ClubType;
-import de.infoware.android.mti.enums.ApiError;
 
 public class MainActivity extends AppCompatActivity implements ClubDialog.RefRouteDialogListener, HitsPerClubAdapter.ItemClickListener {
     private static final int CLUB_DIALOG_MODE_ADD = 1;
@@ -132,8 +127,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     private void calculateHits(int listIndex, int val) {
         HitsPerClub hits = hitsPerClubList.get(listIndex);
 
-
-        HitsPerClubController.writeHitsToFile(fileDirectory, hitsPerClubList);
     }
 
     private void updateItemRange() {
@@ -198,6 +191,12 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
      */
     @Override
     public void itemClicked(View view, int listIndex) {
+        RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioGroupHitCategory);
+        int idx = radioGroup.getCheckedRadioButtonId();
+        if (idx == findViewById((R.id.radioButtonRegular)).getId()) {
+
+        }
+
         int viewId = view.getId();
         switch (viewId) {
             case R.id.button_positive:
@@ -355,7 +354,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         actionBar.setBackgroundDrawable(colorDrawable);
 
         setTitle("Easy Golf Stats");
-
         actionBar.setDisplayShowHomeEnabled(true);
         actionBar.setDisplayUseLogoEnabled(true);
         actionBar.setTitle("Easy Golf Stats");
@@ -382,10 +380,10 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
 
         HitsPerClubController.initDataDirectory(basePath, "data");
         if (!HitsPerClubController.isStatisticOpen(fileDirectory)) {
-            ArrayList<Club> clubs = ClubManager.getClubList(fileDirectory);
+            ArrayList<Club> clubs = BagController.getClubList(fileDirectory);
             HitsPerClubController.initHitFile(fileDirectory, clubs);
         }
-        hitsPerClubList = HitsPerClubController.readHitsFromFile(fileDirectory);
+        hitsPerClubList = HitsPerClubController.getHitsPerClubFromFile(fileDirectory);
         final HitsPerClubAdapter adapter = new HitsPerClubAdapter(hitsPerClubList, this);
 
         // Attach the adapter to the recyclerview to populate items

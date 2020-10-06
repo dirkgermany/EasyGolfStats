@@ -153,8 +153,8 @@ public class Logger {
         if (reStarted) {
             String logFileName = parentPath + "/" + getProperty("loggingFileName", "log/logging.log");
             Level logLevel = Level.parse(getProperty("logLevel", "FINE"));
-            this.logFileName = logFileName;
-            this.logLevel = logLevel;
+            Logger.logFileName = logFileName;
+            Logger.logLevel = logLevel;
 
             checkPath();
         }

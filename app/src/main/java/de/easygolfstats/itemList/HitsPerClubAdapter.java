@@ -5,9 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -86,7 +83,7 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
     }
 
     public interface ItemClickListener {
-        public void itemClicked(View view, int index);
+        void itemClicked(View view, int index);
     }
 
     // Returns the total count of items in the list

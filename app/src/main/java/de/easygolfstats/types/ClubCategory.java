@@ -8,6 +8,6 @@ public enum ClubCategory {
     WEDGE,
     HYBRID,
     PUTTER,
-    CHIPPER;
+    CHIPPER
 
 }

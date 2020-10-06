@@ -4,6 +4,6 @@ public enum HitQuality {
 
     GOOD,
     BAD,
-    NEUTRAL;
+    NEUTRAL
 
 }

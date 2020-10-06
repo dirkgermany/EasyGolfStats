@@ -1,7 +1,6 @@
 package de.easygolfstats.main;
 
 import de.easygolfstats.log.Logger;
-import de.easygolfstats.model.Club;
 import de.easygolfstats.model.HitsPerClub;
 
 import java.util.ArrayList;
@@ -12,7 +11,7 @@ public class GolfStatsManager {
     private boolean isWorking = false;
     private ArrayList<HitsPerClub> hitsPerClubList;
 
-    private Logger logger = Logger.createLogger("RefRouteManager");
+    private Logger logger = Logger.createLogger("GolfStatsManager");
 
 
     public GolfStatsManager(ArrayList<HitsPerClub> hitsPerClubList) {
@@ -25,9 +24,6 @@ public class GolfStatsManager {
         isWorking = false;
     }
 
-    // =========================================================
-    //      Routing status
-    // =========================================================
 
     public boolean isWorking() {
         return isWorking;
@@ -35,14 +31,6 @@ public class GolfStatsManager {
 
     public void resetWorkingSwitch() {
         isWorking = true;
-    }
-
-    // =========================================================
-    //      Route handling
-    // =========================================================
-
-    public int getLastRefRouteId() {
-        return lastRefRouteId;
     }
 
     public boolean nextRefRouteExists() {

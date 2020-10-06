@@ -49,7 +49,7 @@ public class ClubDialog extends AppCompatDialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        View view = inflater.inflate(R.layout.refroute_dialog, null);
+        View view = inflater.inflate(R.layout.club_dialog, null);
 
         builder.setView(view)
                 .setNegativeButton("Abbruch", new DialogInterface.OnClickListener() {

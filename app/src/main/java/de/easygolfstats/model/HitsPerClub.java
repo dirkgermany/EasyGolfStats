@@ -15,6 +15,18 @@ public class HitsPerClub {
         this.hitsBad = hitsBad;
     }
 
+    public void setHitsGood(int hitsGood) {
+        this.hitsGood = hitsGood;
+    }
+
+    public void setHitsNeutral(int hitsNeutral) {
+        this.hitsNeutral = hitsNeutral;
+    }
+
+    public void setHitsBad(int hitsBad) {
+        this.hitsBad = hitsBad;
+    }
+
     public String getClubName() {
         return clubName;
     }
