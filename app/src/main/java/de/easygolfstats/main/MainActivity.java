@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
@@ -28,6 +29,7 @@ import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
 import de.easygolfstats.model.HitsPerClub;
 import de.easygolfstats.types.ClubType;
+import de.easygolfstats.types.HitCategory;
 
 public class MainActivity extends AppCompatActivity implements ClubDialog.RefRouteDialogListener, HitsPerClubAdapter.ItemClickListener {
     private static final int CLUB_DIALOG_MODE_ADD = 1;
@@ -95,8 +97,8 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         switch (dialogMode) {
             case CLUB_DIALOG_MODE_ADD:
                 int newListIndex = hitsPerClubList.size();
-                Club newClub = new Club(clubName, clubType);
-                HitsPerClub hitsPerClub = new HitsPerClub( clubName,  0,  0,  0);
+                Club newClub = new Club(clubName, clubType, listIndex);
+                HitsPerClub hitsPerClub = new HitsPerClub( newClub,  0,  0,  0);
 //                hitsPerClubList.add(newListIndex, newClub);
                 rvHitsPerClub.getAdapter().notifyItemInserted(newListIndex);
                 rvHitsPerClub.getAdapter().notifyItemRangeChanged(listIndex, hitsPerClubList.size());
@@ -183,37 +185,80 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     }
 
     /**
-     * React to click on a refroute item.
-     * Distinguishes between textfield, checkbox and button
      *
      * @param view
      * @param listIndex
      */
     @Override
     public void itemClicked(View view, int listIndex) {
+        int viewId = view.getId();
+        if (viewId == R.id.itemClubName || viewId == R.id.itemCountText) {
+            return;
+        }
+
+//        RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(listIndex);
+//        holder.itemView.getId();
+//        TextView counter = (TextView) holder.itemView.findViewById(R.id.itemCountText);
+
         RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioGroupHitCategory);
+        HitCategory hitCategory = null;
         int idx = radioGroup.getCheckedRadioButtonId();
         if (idx == findViewById((R.id.radioButtonRegular)).getId()) {
+            hitCategory = HitCategory.REGULAR;
+        }
+        if (idx == findViewById((R.id.radioButtonPitch)).getId()) {
+            hitCategory = HitCategory.PITCH;
+        }
+        if (idx == findViewById((R.id.radioButtonChip)).getId()) {
+            hitCategory = HitCategory.CHIP;
+        }
+        if (idx == findViewById((R.id.radioButtonBunker)).getId()) {
+            hitCategory = HitCategory.BUNKER;
+        }
+
+        HitsPerClub hitsPerClubOverAll = hitsPerClubList.get(listIndex);
+        Club club = BagController.getClubByName(hitsPerClubOverAll.getClubName());
+
+        HitsPerClub hitsPerClubAndCat = null;
+
+        switch (hitCategory) {
+            case PITCH:
+                hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(HitCategory.PITCH, club);
+                break;
+            case CHIP:
+                hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(HitCategory.CHIP, club);
+                break;
+            case BUNKER:
+                hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(HitCategory.BUNKER, club);
+                break;
+
+            case REGULAR:
+            default:
+                hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(HitCategory.REGULAR, club);
+                break;
 
         }
 
-        int viewId = view.getId();
         switch (viewId) {
             case R.id.button_positive:
-                // Eintrag in Datei updaten
-                calculateHits(listIndex, 1);
+                hitsPerClubAndCat.incrementHitsGood(1);
+                hitsPerClubList.get(listIndex).incrementHitsGood(1);
                 break;
 
             case R.id.button_neutral:
-                // Click on item text
-                calculateHits(listIndex, 0);
+                hitsPerClubAndCat.incrementHitsNeutral(1);
+                hitsPerClubList.get(listIndex).incrementHitsNeutral(1);
                 break;
 
             case R.id.button_negative:
-                calculateHits(listIndex, -1);
+                hitsPerClubAndCat.incrementHitsBad(1);
+                hitsPerClubList.get(listIndex).incrementHitsBad(1);
                 break;
             default:
         }
+
+        HitsPerClubController.setHitsPerClubAndCat(hitCategory, club, hitsPerClubAndCat);
+        rvHitsPerClub.getAdapter().notifyItemChanged(listIndex);
     }
 
     public static void showMessage(String title, String message) {
@@ -224,24 +269,11 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         builder.show();
     }
 
-    // ======================================================================================================
-    // Logical flow around routing
-    // ======================================================================================================
-
     private void resetRouting() {
         logger.finest("resetRouting", "Activate GO Button");
-        Button button = findViewById(R.id.buttonGo);
+        Button button = findViewById(R.id.buttonNew);
         button.setText("GO");
         button.setHintTextColor(Color.parseColor(MARK_COLOR_IN_WORK));
-        isPaused = false;
-        isRoundActive = false;
-    }
-
-    private void pauseOnAutoPilotOff() {
-        logger.finest("pauseOnAutoPilotOff", "React to user action");
-        Button button = findViewById(R.id.buttonGo);
-        button.setText("FORTSETZEN");
-        button.setHintTextColor(Color.parseColor(MARK_COLOR_PAUSED));
         isPaused = false;
         isRoundActive = false;
     }
@@ -256,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         }
         pauseButtonWasClicked = true;
 
-        Button button = findViewById(R.id.buttonGo);
+        Button button = findViewById(R.id.buttonNew);
         button.setText("FORTSETZEN");
         button.setHintTextColor(Color.parseColor(MARK_COLOR_PAUSED));
         isPaused = true;
@@ -264,8 +296,8 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     }
 
     private void buttonGoClicked() {
-        logger.finest("buttonGoClicked", "");
-        Button button = findViewById(R.id.buttonGo);
+        logger.finest("buttonNewClicked", "");
+        Button button = findViewById(R.id.buttonNew);
         boolean restartTour = false;
         button.setText("PAUSE");
         button.setHintTextColor(Color.parseColor(MARK_COLOR_NOT_DONE));
@@ -284,14 +316,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         isRoundActive = true;
 
         routeRefRoute(restartTour);
-    }
-
-    /*
-    Called when a reference route was finished or cancelled or an exception was triggered
-    This function has to decide what to do next; wait for user action or start the next route (if there are more routes to drive)
-     */
-    private void routeFinished() {
-        logger.info("routeFinished", "callbackResult = ");
     }
 
     /*
@@ -317,10 +341,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
             hideMapTrip(golfStatsManager);
         }
     }
-
-    // ======================================================================================================
-    // Activity dedicated
-    // ======================================================================================================
 
     @Override
     public void onDestroy() {
@@ -379,11 +399,12 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         logger.config("onCreate", "Datenverzeichnis: " + fileDirectory);
 
         HitsPerClubController.initDataDirectory(basePath, "data");
-        if (!HitsPerClubController.isStatisticOpen(fileDirectory)) {
-            ArrayList<Club> clubs = BagController.getClubList(fileDirectory);
+        BagController.initClubList(fileDirectory);
+        if (!HitsPerClubController.isStatisticOpen()) {
+            ArrayList<Club> clubs = BagController.getClubListSorted();
             HitsPerClubController.initHitFile(fileDirectory, clubs);
         }
-        hitsPerClubList = HitsPerClubController.getHitsPerClubFromFile(fileDirectory);
+        hitsPerClubList = HitsPerClubController.getHitsPerClubFromFile();
         final HitsPerClubAdapter adapter = new HitsPerClubAdapter(hitsPerClubList, this);
 
         // Attach the adapter to the recyclerview to populate items
@@ -484,7 +505,7 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     }
 
     private void activateGoButton(boolean active) {
-        Button button = findViewById(R.id.buttonGo);
+        Button button = findViewById(R.id.buttonNew);
         button.setEnabled(active);
         button.setClickable(active);
 

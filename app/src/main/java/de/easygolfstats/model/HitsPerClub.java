@@ -2,14 +2,14 @@ package de.easygolfstats.model;
 
 import de.easygolfstats.types.HitQuality;
 
-public class HitsPerClub {
-    private String clubName;
+public class HitsPerClub implements Comparable{
+    private Club club;
     private int hitsGood;
     private int hitsNeutral;
     private int hitsBad;
 
-    public HitsPerClub(String clubName, int hitsGood, int hitsNeutral, int hitsBad) {
-        this.clubName = clubName;
+    public HitsPerClub(Club club, int hitsGood, int hitsNeutral, int hitsBad) {
+        this.club = club;
         this.hitsGood = hitsGood;
         this.hitsNeutral = hitsNeutral;
         this.hitsBad = hitsBad;
@@ -19,16 +19,29 @@ public class HitsPerClub {
         this.hitsGood = hitsGood;
     }
 
+    public void incrementHitsGood(int incrementVal) {
+        this.hitsGood+=incrementVal;
+    }
+
     public void setHitsNeutral(int hitsNeutral) {
         this.hitsNeutral = hitsNeutral;
+    }
+
+    public void incrementHitsNeutral(int incrementVal) {
+        this.hitsNeutral+= incrementVal;
     }
 
     public void setHitsBad(int hitsBad) {
         this.hitsBad = hitsBad;
     }
 
+    public void incrementHitsBad (int incrementVal) {
+        this.hitsBad+=incrementVal;
+        int bla = hitsBad;
+    }
+
     public String getClubName() {
-        return clubName;
+        return club.getClubName();
     }
 
     public int getHitsGood() {
@@ -43,7 +56,13 @@ public class HitsPerClub {
         return hitsBad;
     }
 
-    public int getHitsPositiveCalculated() {
-        return hitsGood - hitsBad;
+    public int getHitsOverAll() {
+        return hitsGood + hitsBad + hitsNeutral;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        HitsPerClub other = (HitsPerClub) o;
+        return this.club.compareTo(other.club);
     }
 }

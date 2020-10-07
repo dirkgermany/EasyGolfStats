@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import de.easygolfstats.R;
 import de.easygolfstats.model.HitsPerClub;
 
+import java.util.Date;
 import java.util.List;
 
 public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.ViewHolder> {
@@ -64,7 +65,7 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
         TextView clubNameTextView = viewHolder.clubNameTextView;
         TextView positiveCounter = viewHolder.positiveCounter;
         clubNameTextView.setText(hitsPerClub.getClubName());
-        positiveCounter.setText(String.valueOf(hitsPerClub.getHitsPositiveCalculated()));
+        positiveCounter.setText(String.valueOf(hitsPerClub.getHitsOverAll()));
         Button buttonNeutral = viewHolder.buttonNeutral;
         Button buttonPositive = viewHolder.buttonPositive;
         Button buttonNegative = viewHolder.buttonNegative;

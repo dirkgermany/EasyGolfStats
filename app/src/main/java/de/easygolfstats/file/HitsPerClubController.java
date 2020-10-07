@@ -5,6 +5,8 @@ import androidx.annotation.WorkerThread;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,26 +33,66 @@ public class HitsPerClubController {
     private static int QUALITY_BAD_COUNTER_POS = 4;
     private static String CSV_SEPARATOR = ";";
 
+    private static HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap;
+    private static String fileDirectory = "";
+
 
     public static void initDataDirectory(String baseDirectory, String dataDirectory) {
+        HitsPerClubController.fileDirectory = baseDirectory + "/" + dataDirectory;
         CsvFile.createDirectory(baseDirectory, dataDirectory);
     }
 
-    public static boolean isStatisticOpen (String fileDirectory) {
+    public static boolean isStatisticOpen () {
         return CsvFile.fileExists(fileDirectory, HITS_FILENAME_ACTIVE + FILE_SUFFIX);
     }
 
-    public static void finishStatistic (String fileDirectory) {
+    public static void finishStatistic () {
         String activeFileName = HITS_FILENAME_ACTIVE + FILE_SUFFIX;
         String archiveFileName = HITS_FILENAME_FINISHED_TEMPLATE + new Date().toString() + FILE_SUFFIX;
 
         CsvFile.renameFile(fileDirectory, activeFileName, archiveFileName);
     }
 
-    public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileDirectory) {
+    public static void setHitsPerClubAndCat(HitCategory category, Club club, HitsPerClub hitsPerClub) {
+        HitsPerClub sourceHits = getHitsPerClubAndCat(category, club);
+        sourceHits.setHitsGood(hitsPerClub.getHitsGood());
+        sourceHits.setHitsBad(hitsPerClub.getHitsBad());
+        sourceHits.setHitsNeutral(hitsPerClub.getHitsNeutral());
+
+        writeHitsToFile();
+    }
+
+    public static HitsPerClub getHitsPerClubAndCat(HitCategory category, Club club) {
+        if (null == hitMap) {
+            return null;
+        }
+        ArrayList<HitsPerClub> hitsPerClubs = hitMap.get(category);
+        if (null == hitsPerClubs) {
+            hitsPerClubs = new ArrayList<>();
+            HitsPerClub hitsPerClub = new HitsPerClub(club, 0, 0, 0);
+            hitsPerClubs.add(hitsPerClub);
+            hitMap.put(category,hitsPerClubs);
+            return hitsPerClub;
+        }
+
+        Iterator<HitsPerClub> it = hitsPerClubs.iterator();
+        while (it.hasNext()) {
+            HitsPerClub hitsPerClub = it.next();
+            if (hitsPerClub.getClubName().equals(club.getClubName())) {
+                return hitsPerClub;
+            }
+        }
+
+        HitsPerClub hitsPerClub = new HitsPerClub(club, 0, 0, 0);
+        hitsPerClubs.add(hitsPerClub);
+        hitMap.put(category,hitsPerClubs);
+        return hitsPerClub;
+    }
+
+    public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile() {
         // Get items from file
         String filePath = fileDirectory + "/" + HITS_FILENAME_ACTIVE + FILE_SUFFIX;
-        Map<HitCategory, ArrayList<HitsPerClub>> fileItems = new HashMap<>();
+        hitMap = new HashMap<>();
 
         List<ArrayList<String>> csvLines = CsvFile.readFile(filePath, CSV_SEPARATOR);
         if (null != csvLines) {
@@ -63,19 +105,21 @@ public class HitsPerClubController {
                 Integer qualityNeutral = Integer.valueOf(nextItem.get(QUALITY_NEUTRAL_COUNTER_POS));
                 Integer qualityBad = Integer.valueOf(nextItem.get(QUALITY_BAD_COUNTER_POS));
 
-                ArrayList<HitsPerClub> hits = fileItems.get(category);
+                ArrayList<HitsPerClub> hits = hitMap.get(category);
                 if (null == hits) {
                     hits = new ArrayList<>();
                 }
-                hits.add(new HitsPerClub(clubName, qualityGood, qualityNeutral, qualityBad));
-                fileItems.put(category, hits);
+                Club club = BagController.getClubByName(clubName);
+                hits.add(new HitsPerClub(club, qualityGood, qualityNeutral, qualityBad));
+                hitMap.put(category, hits);
             }
         }
-        return fileItems;
+        return hitMap;
     }
 
-    public static void writeHitsToFile(String fileDirectory, HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap) {
+    public static void writeHitsToFile(HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap) {
         String filePath = fileDirectory + "/" + HITS_FILENAME_ACTIVE + FILE_SUFFIX;
+
         Iterator<Map.Entry<HitCategory, ArrayList<HitsPerClub>>> it = hitMap.entrySet().iterator();
         ArrayList<String> csvLines = new ArrayList<>();
         while (it.hasNext()) {
@@ -100,8 +144,12 @@ public class HitsPerClubController {
         CsvFile.writeToFile(filePath, csvLines);
     }
 
-    public static ArrayList<HitsPerClub> getHitsPerClubFromFile (String fileDirectory) {
-        Map<HitCategory, ArrayList<HitsPerClub>> hitMap = readHitsFromFile(fileDirectory);
+    private static void writeHitsToFile () {
+        writeHitsToFile(hitMap);
+    }
+
+    public static ArrayList<HitsPerClub> getHitsPerClubFromFile () {
+        Map<HitCategory, ArrayList<HitsPerClub>> hitMap = readHitsFromFile();
 
         HashMap<String, HitsPerClub> hitsPerClub = new HashMap<>();
         Iterator<Map.Entry<HitCategory, ArrayList<HitsPerClub>>> itMap = hitMap.entrySet().iterator();
@@ -110,22 +158,24 @@ public class HitsPerClubController {
             //           HitCategory category = pair.getKey();
             Iterator<HitsPerClub> itHits = pair.getValue().iterator();
             while (itHits.hasNext()) {
-                HitsPerClub hit = itHits.next();
-                String clubName = hit.getClubName();
+                HitsPerClub hitsPerClubAndCat = itHits.next();
+                String clubName = hitsPerClubAndCat.getClubName();
 
                 HitsPerClub summaryPerClub = hitsPerClub.get(clubName);
                 if (null == summaryPerClub) {
-                    summaryPerClub = new HitsPerClub(clubName, 0, 0, 0);
+                    Club club = BagController.getClubByName(clubName);
+                    summaryPerClub = new HitsPerClub(club, hitsPerClubAndCat.getHitsGood(), hitsPerClubAndCat.getHitsNeutral(), hitsPerClubAndCat.getHitsBad());
                 } else {
-                    summaryPerClub.setHitsGood(summaryPerClub.getHitsGood() + hit.getHitsGood());
-                    summaryPerClub.setHitsNeutral(summaryPerClub.getHitsNeutral() + hit.getHitsNeutral());
-                    summaryPerClub.setHitsBad(summaryPerClub.getHitsBad() + hit.getHitsBad());
+                    summaryPerClub.setHitsGood(summaryPerClub.getHitsGood() + hitsPerClubAndCat.getHitsGood());
+                    summaryPerClub.setHitsNeutral(summaryPerClub.getHitsNeutral() + hitsPerClubAndCat.getHitsNeutral());
+                    summaryPerClub.setHitsBad(summaryPerClub.getHitsBad() + hitsPerClubAndCat.getHitsBad());
                 }
                 hitsPerClub.put(clubName, summaryPerClub);
             }
         }
-
-        return new ArrayList<>(hitsPerClub.values());
+        ArrayList<HitsPerClub> values = new ArrayList<>(hitsPerClub.values());
+        Collections.sort(values);
+        return values;
     }
 
     public static void initHitFile(String fileDirectory, List<Club> clubs) {
@@ -133,12 +183,12 @@ public class HitsPerClubController {
         ArrayList<HitsPerClub> hitsPerClubs = new ArrayList<>();
         while (it.hasNext()) {
             Club club = it.next();
-            HitsPerClub hitsPerClub = new HitsPerClub(club.getClubName(), 0, 0, 0);
+            HitsPerClub hitsPerClub = new HitsPerClub(club, 0, 0, 0);
             hitsPerClubs.add(hitsPerClub);
         }
 
         HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap = new HashMap<>();
         hitMap.put(HitCategory.REGULAR, hitsPerClubs);
-        writeHitsToFile(fileDirectory, hitMap);
+        writeHitsToFile(hitMap);
     }
 }

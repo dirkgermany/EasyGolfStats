@@ -19,20 +19,21 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:backgroundTint="#ECEFCD"
-        app:layout_constraintBottom_toTopOf="@+id/buttonGo"
+        app:layout_constraintBottom_toTopOf="@+id/buttonNew"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/radioGroupHitCategory" />
 
     <Button
-        android:id="@+id/buttonGo"
+        android:id="@+id/buttonNew"
         android:layout_width="111dp"
         android:layout_height="45dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
+        android:backgroundTint="#F69B9B"
         android:foregroundTint="#673AB7"
         android:onClick="startOrStopRouting"
-        android:text="NEW"
+        android:text="New Stat"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
@@ -84,10 +85,10 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="16dp"
-        android:text="Spiel"
-        android:textOff="Turnier"
+        android:textOff="Game"
         android:textOn="Training"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Training" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
