@@ -39,6 +39,14 @@ public class HitsPerClubController {
         CsvFile.createDirectory(baseDirectory, dataDirectory);
     }
 
+    public static void initializeFiles() {
+        BagController.initClubList(fileDirectory);
+        if (!isStatisticOpen()) {
+            ArrayList<Club> clubs = BagController.getClubListSorted();
+            initHitFile(clubs);
+        }
+    }
+
     public static boolean isStatisticOpen () {
         return CsvFile.fileExists(fileDirectory, HITS_FILENAME_ACTIVE + FILE_SUFFIX);
     }
@@ -145,6 +153,11 @@ public class HitsPerClubController {
         writeHitsToFile(hitMap);
     }
 
+    public static ArrayList<HitsPerClub> copyHitsPerClubFromFile(ArrayList<HitsPerClub>  destList) {
+        destList.addAll(getHitsPerClubFromFile());
+        return destList;
+    }
+
     public static ArrayList<HitsPerClub> getHitsPerClubFromFile () {
         Map<HitCategory, ArrayList<HitsPerClub>> hitMap = readHitsFromFile();
 
@@ -175,7 +188,7 @@ public class HitsPerClubController {
         return values;
     }
 
-    public static void initHitFile(String fileDirectory, List<Club> clubs) {
+    public static void initHitFile(List<Club> clubs) {
         Iterator<Club> it = clubs.iterator();
         ArrayList<HitsPerClub> hitsPerClubs = new ArrayList<>();
         while (it.hasNext()) {

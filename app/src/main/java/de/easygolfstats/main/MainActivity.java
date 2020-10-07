@@ -27,13 +27,9 @@ import de.easygolfstats.itemList.HitsPerClubAdapter;
 import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
 import de.easygolfstats.model.HitsPerClub;
-import de.easygolfstats.types.ClubType;
 import de.easygolfstats.types.HitCategory;
 
-public class MainActivity extends AppCompatActivity implements ClubDialog.RefRouteDialogListener, HitsPerClubAdapter.ItemClickListener {
-    private static final int CLUB_DIALOG_MODE_ADD = 1;
-    private static final int CLUB_DIALOG_MODE_EDIT = 2;
-    private boolean dialogIsActive = false;
+public class MainActivity extends AppCompatActivity implements HitsPerClubAdapter.ItemClickListener {
 
     private static final String MARK_COLOR_ROUTE_DONE = "#9CB548";
     private static final String MARK_COLOR_NOT_ACTIVE = "#E6EAED";
@@ -47,137 +43,27 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     private RecyclerView rvHitsPerClub;
 
     private String fileDirectory;
-    private boolean isRoundActive = false;
-    private boolean isPaused = false;
-    private boolean pauseButtonWasClicked = false;
     private Logger logger;
 
-    // ======================================================================================================
-    // GUI control - reacting to user actions around route selection, adding and so on
-    // ======================================================================================================
 
-    /**
-     * React to GO Button click
-     */
-    public void startOrStopRouting(View view) {
-        logger.finest("startOrStopRouting", "Main control button was clicked");
+    public void newPeriod(View view) {
+        logger.finest("newPeriod", "NEW Button was clicked");
 
-        if (isRoundActive && !isPaused) {
-            // Make a PAUSE
-            buttonPauseClicked();
-        } else {
-            // START routing
-            buttonGoClicked();
+
+        HitsPerClubController.finishStatistic();
+        int size = hitsPerClubList.size();
+
+        hitsPerClubList.clear();
+        rvHitsPerClub.getAdapter().notifyDataSetChanged();
+
+        HitsPerClubController.initializeFiles();
+        hitsPerClubList = HitsPerClubController.copyHitsPerClubFromFile(hitsPerClubList);
+        size = hitsPerClubList.size();
+        for (int i = 0; i < size; i++) {
+            rvHitsPerClub.getAdapter().notifyItemInserted(0);
         }
-    }
+        rvHitsPerClub.getAdapter().notifyDataSetChanged();
 
-
-    @Override
-    public void clubDialogCancel() {
-        dialogIsActive = false;
-    }
-
-    /**
-     * Callback when RefRouteDialog is finished with OK
-     *
-     * @param clubName        Name edited by user
-     * @param clubType Description edited by user
-     * @param listIndex           Is equal to or greater than 0 if dialogMode is REFROUTE_DIALOG_MODE_EDIT;
-     *                            is NULL or lower than 0 if dialogMode is REFROUTE_DIALOG_MODE_ADD.
-     * @param dialogMode          Distinguishes between EDIT or ADD mode.
-     */
-    @Override
-    public void clubDialogOk(String clubName, ClubType clubType, Integer listIndex, int dialogMode) {
-        // aware that listIndex can be -1 or null if dialogMode is to add - so ignore listIndex when adding an item
-
-        switch (dialogMode) {
-            case CLUB_DIALOG_MODE_ADD:
-                int newListIndex = hitsPerClubList.size();
-                Club newClub = new Club(clubName, clubType, listIndex);
-                HitsPerClub hitsPerClub = new HitsPerClub( newClub,  0,  0,  0);
-//                hitsPerClubList.add(newListIndex, newClub);
-                rvHitsPerClub.getAdapter().notifyItemInserted(newListIndex);
-                rvHitsPerClub.getAdapter().notifyItemRangeChanged(listIndex, hitsPerClubList.size());
-//                BagController.writeBagToFile(fileDirectory, hitsPerClub);
-
-                activateGoButton(hitsPerClubList.size() > 0);
-                break;
-
-            case CLUB_DIALOG_MODE_EDIT:
-                if (null == listIndex || 0 > listIndex) {
-                    Toast.makeText(this, "Fehler: Index des Listeneintrags unbekannt. " + "/n" + "Änderung wird verworfen", Toast.LENGTH_LONG);
-                    return;
-                }
-
- //               Club club = hitsPerClub.get(listIndex);
- //               club.setClubName(clubName);
- //               club.setClubType(clubType);
-                rvHitsPerClub.getAdapter().notifyItemChanged(listIndex);
-//                BagController.writeBagToFile(fileDirectory, hitsPerClub);
-                break;
-
-            default:
-                Toast.makeText(this, "Fehler: Unbekannter Dialogmodus. " + "/n" + "Änderung wird verworfen", Toast.LENGTH_LONG);
-        }
-        dialogIsActive = false;
-    }
-
-    private void calculateHits(int listIndex, int val) {
-        HitsPerClub hits = hitsPerClubList.get(listIndex);
-
-    }
-
-    private void updateItemRange() {
- //       BagController.writeBagToFile(fileDirectory, hitsPerClubList);
-    }
-
-    private void deleteItem(int listIndex) {
-        hitsPerClubList.remove(listIndex);
-        rvHitsPerClub.getAdapter().notifyItemRemoved(listIndex);
-        rvHitsPerClub.getAdapter().notifyItemRangeChanged(listIndex, hitsPerClubList.size());
-//        BagController.writeBagToFile(fileDirectory, hitsPerClubList);
-        // Show user that he can start
-        activateGoButton(hitsPerClubList.size() > 0);
-    }
-
-    private void editItem(int listIndex) {
-        String clubName = hitsPerClubList.get(listIndex).getClubName();
-//        ClubType clubType = hitsPerClubList.get(listIndex).getClubType();
-
-        ClubDialog dialog = new ClubDialog();
-        dialog.setClubName(clubName);
-//        dialog.setClubType(clubType);
-        dialog.setListIndex(listIndex);
-        dialog.setDialogMode(CLUB_DIALOG_MODE_EDIT);
-
-        dialog.show(getSupportFragmentManager(), "Referenzroute bearbeiten");
-    }
-
-    /**
-     * Shows dialog with new reference route name and description
-     */
-    public void addItem(View view) {
-        if (dialogIsActive) {
-            return;
-        }
-
-        ClubDialog dialog = new ClubDialog();
-        dialog.setDialogMode(CLUB_DIALOG_MODE_ADD);
-        dialog.show(getSupportFragmentManager(), "Referenzroute hinzufügen");
-    }
-
-    public boolean changeItems(int oldPos, int newPos) {
-        HitsPerClub itemMoveToPosOld = hitsPerClubList.get(newPos);
-        HitsPerClub itemMoveToPosNew = hitsPerClubList.get(oldPos);
-        hitsPerClubList.set(newPos, itemMoveToPosNew);
-        hitsPerClubList.set(oldPos, itemMoveToPosOld);
-
-        rvHitsPerClub.getAdapter().notifyItemChanged(newPos);
-        rvHitsPerClub.getAdapter().notifyItemChanged(oldPos);
-
-        updateItemRange();
-
-        return true;
     }
 
     /**
@@ -191,10 +77,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         if (viewId == R.id.itemClubName || viewId == R.id.itemCountText) {
             return;
         }
-
-//        RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(listIndex);
-//        holder.itemView.getId();
-//        TextView counter = (TextView) holder.itemView.findViewById(R.id.itemCountText);
 
         RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioGroupHitCategory);
         HitCategory hitCategory = null;
@@ -265,50 +147,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         builder.show();
     }
 
-    private void resetRouting() {
-        logger.finest("resetRouting", "Activate GO Button");
-        Button button = findViewById(R.id.buttonNew);
-        button.setText("GO");
-        button.setHintTextColor(Color.parseColor(MARK_COLOR_IN_WORK));
-        isPaused = false;
-        isRoundActive = false;
-    }
-
-    private void buttonPauseClicked() {
-        logger.finest("buttonPauseClicked", "React to user action");
-
-        // if 'resume' was clicked and MapTrip not was yet on top
-        // the button may not be clicked once again
-        if (pauseButtonWasClicked) {
-            return;
-        }
-        pauseButtonWasClicked = true;
-
-        Button button = findViewById(R.id.buttonNew);
-        button.setText("FORTSETZEN");
-        button.setHintTextColor(Color.parseColor(MARK_COLOR_PAUSED));
-        isPaused = true;
-    }
-
-    private void buttonGoClicked() {
-        logger.finest("buttonNewClicked", "");
-        Button button = findViewById(R.id.buttonNew);
-        boolean restartTour = false;
-        button.setText("PAUSE");
-        button.setHintTextColor(Color.parseColor(MARK_COLOR_NOT_DONE));
-
-            refreshAllItems();
-
-        // if before active route was paused, resume
-        // resume means that it's not recommended to start route from beginning of tour
-        if (isPaused) {
-            restartTour = true;
-        }
-
-        isPaused = false;
-        isRoundActive = true;
-
-    }
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -318,7 +156,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     @Override
     public void onResume() {
         super.onResume();
-        pauseButtonWasClicked = false;
         logger.fine("onResume", "Anwendung wurde in den Vordergrund geholt");
     }
 
@@ -366,37 +203,15 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         logger.config("onCreate", "Datenverzeichnis: " + fileDirectory);
 
         HitsPerClubController.initDataDirectory(basePath, "data");
+        HitsPerClubController.initializeFiles();
         BagController.initClubList(fileDirectory);
-        if (!HitsPerClubController.isStatisticOpen()) {
-            ArrayList<Club> clubs = BagController.getClubListSorted();
-            HitsPerClubController.initHitFile(fileDirectory, clubs);
-        }
+
         hitsPerClubList = HitsPerClubController.getHitsPerClubFromFile();
         final HitsPerClubAdapter adapter = new HitsPerClubAdapter(hitsPerClubList, this);
 
         // Attach the adapter to the recyclerview to populate items
         rvHitsPerClub.setAdapter(adapter);
 
-        // SWIPE and MOVE
-        ItemTouchHelper.SimpleCallback simpleItemTouchCallback =
-                new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
-
-                    @Override
-                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder
-                            target) {
-                        final int fromPos = viewHolder.getAdapterPosition();
-                        final int toPos = target.getAdapterPosition();
-                        return changeItems(fromPos, toPos);
-                    }
-
-                    @Override
-                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-//                        refRoutes.remove(viewHolder.getAdapterPosition());
-//                        adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
-                    }
-                };
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-        itemTouchHelper.attachToRecyclerView(rvHitsPerClub);
 
         // Set layout manager to position the items
         // LinearLayoutManager for usage of dividers
@@ -437,30 +252,21 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         }
     }
 
-    private void markItemNotDone(int refRouteId) {
+    private void markItemNotDone(int index) {
         try {
-            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(refRouteId);
-            holder.itemView.setBackgroundColor(Color.parseColor(MARK_COLOR_NOT_DONE));
- //           holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_NOT_DONE));
-            holder.itemView.refreshDrawableState();
+            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(index);
+            holder.itemView.findViewById(R.id.itemCountText);
+
+
         } catch (Exception e) {
             logger.warn("markItemNotDone", "Fehler bei markItemNotDone: " + e.getMessage());
         }
     }
 
-    private void markItemInWork(final int refRouteId) {
-        try {
-            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(refRouteId);
-            holder.itemView.setBackgroundColor(Color.parseColor(MARK_COLOR_IN_WORK));
-//            holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_IN_WORK));
-            holder.itemView.refreshDrawableState();
-        } catch (Exception e) {
-            logger.warn("markItemInWork", "Fehler bei markItemInWork: " + e.getMessage());
-        }
-    }
-
     private void refreshAllItems() {
         for (int i = 0; i < hitsPerClubList.size(); i++) {
+            rvHitsPerClub.getAdapter().notifyItemChanged(i);
+
             markItemNotDone(i);
         }
     }

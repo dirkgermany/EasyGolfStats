@@ -32,7 +32,7 @@
         android:layout_marginBottom="16dp"
         android:backgroundTint="#F69B9B"
         android:foregroundTint="#673AB7"
-        android:onClick="startOrStopRouting"
+        android:onClick="newPeriod"
         android:text="New Stat"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -85,10 +85,8 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="16dp"
-        android:textOff="Game"
-        android:textOn="Training"
+        android:text="Spiel"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:text="Training" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
