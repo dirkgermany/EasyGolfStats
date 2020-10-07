@@ -1,7 +1,5 @@
 package de.easygolfstats.model;
 
-import de.easygolfstats.types.HitQuality;
-
 public class HitsPerClub implements Comparable{
     private Club club;
     private int hitsGood;

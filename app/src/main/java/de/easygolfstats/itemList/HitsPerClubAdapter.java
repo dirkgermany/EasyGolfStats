@@ -11,8 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import de.easygolfstats.R;
 import de.easygolfstats.model.HitsPerClub;
-
-import java.util.Date;
 import java.util.List;
 
 public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.ViewHolder> {

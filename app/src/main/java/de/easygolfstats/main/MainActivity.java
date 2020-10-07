@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
@@ -43,7 +42,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     private static final String MARK_COLOR_PAUSED = "#E97F02";
 
     private static MainActivity mainActivity;
-    private static Thread serverThread;
 
     private ArrayList<HitsPerClub> hitsPerClubList;
     private RecyclerView rvHitsPerClub;
@@ -52,8 +50,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
     private boolean isRoundActive = false;
     private boolean isPaused = false;
     private boolean pauseButtonWasClicked = false;
-
-    private GolfStatsManager golfStatsManager;
     private Logger logger;
 
     // ======================================================================================================
@@ -292,7 +288,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         button.setText("FORTSETZEN");
         button.setHintTextColor(Color.parseColor(MARK_COLOR_PAUSED));
         isPaused = true;
-        golfStatsManager.interruptRouting();
     }
 
     private void buttonGoClicked() {
@@ -302,9 +297,7 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         button.setText("PAUSE");
         button.setHintTextColor(Color.parseColor(MARK_COLOR_NOT_DONE));
 
-        if (!golfStatsManager.isWorking()) {
             refreshAllItems();
-        }
 
         // if before active route was paused, resume
         // resume means that it's not recommended to start route from beginning of tour
@@ -315,33 +308,7 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         isPaused = false;
         isRoundActive = true;
 
-        routeRefRoute(restartTour);
     }
-
-    /*
-    Take a reference route and start it.
-    If the last route was paused it is resumed.
-    If the last route was finished start the next route.
-     */
-    private void routeRefRoute(boolean restartTour) {
-        logger.info("routeRefRoute", "see if there is to start a reference route; restartTour = " + restartTour);
-        if (!restartTour) {
-            logger.finest("routeRefRoute", "call mti.resetWorkingSwitch");
-            golfStatsManager.resetWorkingSwitch();
-        }
-
-        if (golfStatsManager.nextRefRouteExists()) {
-            logger.finest("routeRefRoute", "one more reference route exists; routeItem");
-            int nextRefRouteId = golfStatsManager.getNextRefRouteId();
-            markItemInWork(nextRefRouteId);
-        } else {
-            logger.finest("routeRefRoute", "no more reference route exists; resetRouting, mtiCalls.reset");
-            resetRouting();
-            golfStatsManager.reset();
-            hideMapTrip(golfStatsManager);
-        }
-    }
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -441,9 +408,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         rvHitsPerClub.addItemDecoration(dividerItemDecoration);
 
         Settings settings = new Settings(basePath + "/app.properties");
-        // init worker
-        golfStatsManager = new GolfStatsManager(hitsPerClubList);
-
     }
 
 
@@ -495,9 +459,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         }
     }
 
-    /**
-     * Unmark list items
-     */
     private void refreshAllItems() {
         for (int i = 0; i < hitsPerClubList.size(); i++) {
             markItemNotDone(i);
@@ -514,23 +475,6 @@ public class MainActivity extends AppCompatActivity implements ClubDialog.RefRou
         } else {
             button.setTextColor(Color.parseColor("#000000"));
         }
-    }
-
-
-    // ======================================================================================================
-    // Threads
-    // ======================================================================================================
-    private void hideMapTrip(final GolfStatsManager golfStatsManager) {
-        serverThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("HideMapThread");
-                String className = MainActivity.this.getClass().getCanonicalName();
-                String packageName = getPackageName();
-                golfStatsManager.showApp(packageName, className);
-            }
-        });
-        serverThread.start();
     }
 
 }

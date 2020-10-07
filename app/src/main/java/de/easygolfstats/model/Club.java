@@ -17,24 +17,12 @@ public class Club implements  Comparable{
         return clubName;
     }
 
-    public void setClubName(String clubName) {
-        this.clubName = clubName;
-    }
-
     public ClubType getClubType () {
         return clubType;
     }
 
-    public void setClubType (ClubType clubType) {
-        this.clubType = clubType;
-    }
-
     public Integer getClubIndex () {
         return clubIndex;
-    }
-
-    public void setClubIndex (Integer clubIndex) {
-        this.clubIndex = clubIndex;
     }
 
 
