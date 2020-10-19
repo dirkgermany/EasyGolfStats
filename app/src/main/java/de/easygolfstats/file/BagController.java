@@ -56,7 +56,7 @@ public class BagController {
                 ClubType clubType = ClubType.valueOf(clubTypeAsString);
                 String clubIndexAsString = nextItem.get(CLUB_INDEX_POS);
                 Integer clubIndex = Integer.valueOf(clubIndexAsString);
-                clubList.add(new Club(clubName, clubType, clubIndex));
+                clubList.add(new Club(0L, clubName, clubType, clubIndex));
             }
         }
 
@@ -66,17 +66,17 @@ public class BagController {
     }
 
     private static void createDefaultClubList (String filePath) {
-        clubList.add(new Club ("Driver", ClubType.DRIVER_1, 0));
-        clubList.add( new Club ("Putter", ClubType.PUTTER_1, 1));
-        clubList.add(new Club ("SW", ClubType.SAND_WEDGE, 2));
-        clubList.add( new Club ("GW", ClubType.GAP_WEDGE, 3));
-        clubList.add(new Club ("PW", ClubType.PITCHING_WEDGE, 4));
-        clubList.add(new Club ("Iron 9", ClubType.IRON_9, 5));
-        clubList.add(new Club ("Iron 8", ClubType.IRON_8, 6));
-        clubList.add(new Club ("Iron 7", ClubType.IRON_7, 7));
-        clubList.add(new Club ("Iron 6", ClubType.IRON_6,  8));
-        clubList.add(new Club ("Iron 5", ClubType.IRON_5, 9));
-        clubList.add(new Club ("Hybrid 4", ClubType.HYBRID_4, 10));
+        clubList.add(new Club (0L,"Driver", ClubType.DRIVER_1, 0));
+        clubList.add( new Club (0L, "Putter", ClubType.PUTTER_1, 1));
+        clubList.add(new Club (0L, "SW", ClubType.SAND_WEDGE, 2));
+        clubList.add( new Club (0L, "GW", ClubType.GAP_WEDGE, 3));
+        clubList.add(new Club (0L, "PW", ClubType.PITCHING_WEDGE, 4));
+        clubList.add(new Club (0L, "Iron 9", ClubType.IRON_9, 5));
+        clubList.add(new Club (0L, "Iron 8", ClubType.IRON_8, 6));
+        clubList.add(new Club (0L, "Iron 7", ClubType.IRON_7, 7));
+        clubList.add(new Club (0L, "Iron 6", ClubType.IRON_6,  8));
+        clubList.add(new Club (0L, "Iron 5", ClubType.IRON_5, 9));
+        clubList.add(new Club (0L, "Hybrid 4", ClubType.HYBRID_4, 10));
 
         ArrayList<String> csvLines = new ArrayList<>();
         Iterator<Club> it = clubList.iterator();

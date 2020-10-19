@@ -38,6 +38,10 @@ public class HitsPerClub implements Comparable{
         int bla = hitsBad;
     }
 
+    public Club getClub() {
+        return club;
+    }
+
     public String getClubName() {
         return club.getClubName();
     }

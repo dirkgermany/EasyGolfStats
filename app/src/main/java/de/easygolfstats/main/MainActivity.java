@@ -6,17 +6,20 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.RadioGroup;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.androidnetworking.AndroidNetworking;
+import com.jacksonandroidnetworking.JacksonParserFactory;
+
+import java.security.KeyPairGenerator;
 import java.util.ArrayList;
 
 import de.easygolfstats.R;
@@ -27,7 +30,9 @@ import de.easygolfstats.itemList.HitsPerClubAdapter;
 import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
 import de.easygolfstats.model.HitsPerClub;
+import de.easygolfstats.rest.RestCommunication;
 import de.easygolfstats.types.HitCategory;
+import okhttp3.OkHttpClient;
 
 public class MainActivity extends AppCompatActivity implements HitsPerClubAdapter.ItemClickListener {
 
@@ -41,29 +46,32 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 
     private ArrayList<HitsPerClub> hitsPerClubList;
     private RecyclerView rvHitsPerClub;
+    private RestCommunication restCommunication;
 
     private String fileDirectory;
     private Logger logger;
-
+    private int multiplier = 1;
 
     public void newPeriod(View view) {
         logger.finest("newPeriod", "NEW Button was clicked");
 
-
         HitsPerClubController.finishStatistic();
-        int size = hitsPerClubList.size();
 
         hitsPerClubList.clear();
         rvHitsPerClub.getAdapter().notifyDataSetChanged();
 
         HitsPerClubController.initializeFiles();
         hitsPerClubList = HitsPerClubController.copyHitsPerClubFromFile(hitsPerClubList);
-        size = hitsPerClubList.size();
-        for (int i = 0; i < size; i++) {
-            rvHitsPerClub.getAdapter().notifyItemInserted(0);
-        }
         rvHitsPerClub.getAdapter().notifyDataSetChanged();
+    }
 
+    public void revert(View view) {
+        Switch revertSwitch = findViewById(R.id.switchRevert);
+        if (revertSwitch.isChecked()) {
+            multiplier = -1;
+        } else {
+            multiplier = 1;
+        }
     }
 
     /**
@@ -81,16 +89,16 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
         RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioGroupHitCategory);
         HitCategory hitCategory = null;
         int idx = radioGroup.getCheckedRadioButtonId();
-        if (idx == findViewById((R.id.radioButtonRegular)).getId()) {
+        if (idx == findViewById(R.id.radioButtonRegular).getId()) {
             hitCategory = HitCategory.REGULAR;
         }
-        if (idx == findViewById((R.id.radioButtonPitch)).getId()) {
+        if (idx == findViewById(R.id.radioButtonPitch).getId()) {
             hitCategory = HitCategory.PITCH;
         }
-        if (idx == findViewById((R.id.radioButtonChip)).getId()) {
+        if (idx == findViewById(R.id.radioButtonChip).getId()) {
             hitCategory = HitCategory.CHIP;
         }
-        if (idx == findViewById((R.id.radioButtonBunker)).getId()) {
+        if (idx == findViewById(R.id.radioButtonBunker).getId()) {
             hitCategory = HitCategory.BUNKER;
         }
 
@@ -119,18 +127,18 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 
         switch (viewId) {
             case R.id.button_positive:
-                hitsPerClubAndCat.incrementHitsGood(1);
-                hitsPerClubList.get(listIndex).incrementHitsGood(1);
+                hitsPerClubAndCat.incrementHitsGood(1 * multiplier);
+                hitsPerClubList.get(listIndex).incrementHitsGood(1 * multiplier);
                 break;
 
             case R.id.button_neutral:
-                hitsPerClubAndCat.incrementHitsNeutral(1);
-                hitsPerClubList.get(listIndex).incrementHitsNeutral(1);
+                hitsPerClubAndCat.incrementHitsNeutral(1 * multiplier);
+                hitsPerClubList.get(listIndex).incrementHitsNeutral(1 * multiplier);
                 break;
 
             case R.id.button_negative:
-                hitsPerClubAndCat.incrementHitsBad(1);
-                hitsPerClubList.get(listIndex).incrementHitsBad(1);
+                hitsPerClubAndCat.incrementHitsBad(1 * multiplier);
+                hitsPerClubList.get(listIndex).incrementHitsBad(1 * multiplier);
                 break;
             default:
         }
@@ -191,10 +199,7 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
         // Initialize reference routes list
         fileDirectory = basePath + "/data";
 
-        // Prepare Logger
-        // Basic path of files - here should be stored the loggers property file (if used)
         Logger.setBasePath(basePath);
-        // Get a logger instance
         logger = Logger.createLogger("MainActivity");
 
         logger.finest("onCreate", "-->       New Instance        <--");
@@ -222,65 +227,16 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
                 layoutManager.getOrientation());
         rvHitsPerClub.addItemDecoration(dividerItemDecoration);
 
-        Settings settings = new Settings(basePath + "/app.properties");
+//        Settings settings = new Settings(basePath + "/app.properties");
+//        String protocol
+
+//        "http://84.44.128.8:9090/easy_golf_stats/
+
+//        AndroidNetworking.initialize(getApplicationContext());
+//        AndroidNetworking.setParserFactory(new JacksonParserFactory());
+
+        RestCommunication.init(getApplicationContext(), basePath);
+        RestCommunication.getInstance().getClubs();
+
     }
-
-
-    // ======================================================================================================
-    // GUI elements manipulation
-    // ======================================================================================================
-
-    private void markItemPaused(int refRouteId) {
-        try {
-            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(refRouteId);
-            holder.itemView.setBackgroundColor(Color.parseColor(MARK_COLOR_PAUSED));
- //           holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_PAUSED));
-            holder.itemView.refreshDrawableState();
-        } catch (Exception e) {
-            logger.warn("markItemPause", "Fehler bei markItemPaused: " + e.getMessage());
-        }
-    }
-
-    private void markItemDone(int refRouteId) {
-        try {
-            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(refRouteId);
-            holder.itemView.setBackgroundColor(Color.parseColor(MARK_COLOR_ROUTE_DONE));
- //           holder.itemView.findViewById(R.id.itemDeleteButton).setBackgroundColor(Color.parseColor(MARK_COLOR_ROUTE_DONE));
-            holder.itemView.refreshDrawableState();
-        } catch (Exception e) {
-            logger.warn("markItemDone", "Fehler bei markItemDone: " + e.getMessage());
-        }
-    }
-
-    private void markItemNotDone(int index) {
-        try {
-            RecyclerView.ViewHolder holder = rvHitsPerClub.findViewHolderForAdapterPosition(index);
-            holder.itemView.findViewById(R.id.itemCountText);
-
-
-        } catch (Exception e) {
-            logger.warn("markItemNotDone", "Fehler bei markItemNotDone: " + e.getMessage());
-        }
-    }
-
-    private void refreshAllItems() {
-        for (int i = 0; i < hitsPerClubList.size(); i++) {
-            rvHitsPerClub.getAdapter().notifyItemChanged(i);
-
-            markItemNotDone(i);
-        }
-    }
-
-    private void activateGoButton(boolean active) {
-        Button button = findViewById(R.id.buttonNew);
-        button.setEnabled(active);
-        button.setClickable(active);
-
-        if (active) {
-            button.setTextColor(Color.parseColor("#8BC34A"));
-        } else {
-            button.setTextColor(Color.parseColor("#000000"));
-        }
-    }
-
 }
