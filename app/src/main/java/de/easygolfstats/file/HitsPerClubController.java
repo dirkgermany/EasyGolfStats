@@ -102,7 +102,7 @@ public class HitsPerClubController {
         return readHitsFromFile(fileNamePrefix);
     }
 
-    public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileNamePrefix) {
+    private static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileNamePrefix) {
         // Get items from file
         String filePath = fileDirectory + "/" + fileNamePrefix + FILE_SUFFIX;
         hitMap = new HashMap<>();
@@ -208,5 +208,11 @@ public class HitsPerClubController {
         HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap = new HashMap<>();
         hitMap.put(HitCategory.REGULAR, hitsPerClubs);
         writeHitsToFile(hitMap);
+    }
+    
+    public static Date extractDateFromArchivedFileName(String fileName) {
+        String dateAsString = fileName.substr(0, fileName.indexOf(FILE_SUFFIX));
+        dateAsString = dateAsString.substr(dateAsString.indexOf(HITS_FILENAME_FINISHED_TEMPLATE) + length(HITS_FILENAME_FINISHED_TEMPLATE)+1);
+        Date returnDate = Date.parse(dateAsString);
     }
 }
