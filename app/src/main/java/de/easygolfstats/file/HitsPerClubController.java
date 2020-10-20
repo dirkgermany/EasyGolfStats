@@ -93,10 +93,18 @@ public class HitsPerClubController {
         hitMap.put(category,hitsPerClubs);
         return hitsPerClub;
     }
+    
+    public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromActiveFile() {
+        return readHitsFromFile(HITS_FILENAME_ACTIVE);
+    }
+    
+    public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromHistoryFile(String fileNamePrefix) {
+        return readHitsFromFile(fileNamePrefix);
+    }
 
-    public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile() {
+    public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileNamePrefix) {
         // Get items from file
-        String filePath = fileDirectory + "/" + HITS_FILENAME_ACTIVE + FILE_SUFFIX;
+        String filePath = fileDirectory + "/" + fileNamePrefix + FILE_SUFFIX;
         hitMap = new HashMap<>();
 
         List<ArrayList<String>> csvLines = CsvFile.readFile(filePath, CSV_SEPARATOR);
@@ -159,7 +167,7 @@ public class HitsPerClubController {
     }
 
     public static ArrayList<HitsPerClub> getHitsPerClubFromFile () {
-        Map<HitCategory, ArrayList<HitsPerClub>> hitMap = readHitsFromFile();
+        Map<HitCategory, ArrayList<HitsPerClub>> hitMap = readHitsFromActiveFile();
 
         HashMap<String, HitsPerClub> hitsPerClub = new HashMap<>();
         Iterator<Map.Entry<HitCategory, ArrayList<HitsPerClub>>> itMap = hitMap.entrySet().iterator();
