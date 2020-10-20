@@ -26,7 +26,7 @@ public class UpdateHitsDataAtServer {
 
             HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap = HitsPerClubController.readHitsFromHistoryFile(fileName);
             if (null != hitMap && !hitMap.isEmpty()) {
-                Date sessionDate = extractDateFromFileName(fileName);
+                Date sessionDate = HitsPerClubController.extractDateFromFileName(fileName);
                 processMap(sessionDate, hitMap);
             }
 
@@ -72,7 +72,4 @@ public class UpdateHitsDataAtServer {
 
     }
 
-    private Date extractDateFromFileName (String fileName) {
-
-    }
 }
