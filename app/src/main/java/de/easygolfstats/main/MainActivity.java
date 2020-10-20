@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.RadioGroup;
 import android.widget.Switch;
-import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,23 +15,17 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.androidnetworking.AndroidNetworking;
-import com.jacksonandroidnetworking.JacksonParserFactory;
-
-import java.security.KeyPairGenerator;
 import java.util.ArrayList;
 
 import de.easygolfstats.R;
 import de.easygolfstats.file.BagController;
 import de.easygolfstats.file.HitsPerClubController;
-import de.easygolfstats.file.Settings;
 import de.easygolfstats.itemList.HitsPerClubAdapter;
 import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
 import de.easygolfstats.model.HitsPerClub;
 import de.easygolfstats.rest.RestCommunication;
 import de.easygolfstats.types.HitCategory;
-import okhttp3.OkHttpClient;
 
 public class MainActivity extends AppCompatActivity implements HitsPerClubAdapter.ItemClickListener {
 

@@ -1,7 +1,6 @@
 package de.easygolfstats.model;
 
-import java.util.Date;
-
+import org.threeten.bp.LocalDate;
 import de.easygolfstats.types.ClubType;
 import de.easygolfstats.types.HitCategory;
 
@@ -9,7 +8,7 @@ public class Hits {
     private Long _id;
 
     private Long userId;
-    private Date sessionDate;
+    private LocalDate sessionDate;
     private HitCategory hitCategory;
     private ClubType clubType;
     private Integer hitCountGood;
@@ -20,7 +19,7 @@ public class Hits {
     public Hits() {
     }
 
-    public Hits(Long userId, Date sessionDate, HitCategory hitCategory, ClubType clubType, Integer hitCountGood, Integer hitCountNeutral, Integer hitCountBad) {
+    public Hits(Long userId, LocalDate sessionDate, HitCategory hitCategory, ClubType clubType, Integer hitCountGood, Integer hitCountNeutral, Integer hitCountBad) {
         this.userId = userId;
         this.sessionDate = sessionDate;
         this.hitCategory = hitCategory;
@@ -58,11 +57,11 @@ public class Hits {
         this.clubType = clubType;
     }
 
-    public Date getSessionDate () {
+    public LocalDate getSessionDate () {
         return this.sessionDate;
     }
 
-    public void setSessionDate (Date sessionDate) {
+    public void setSessionDate (LocalDate sessionDate) {
         this.sessionDate = sessionDate;
     }
 

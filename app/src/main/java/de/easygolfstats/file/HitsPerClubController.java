@@ -2,9 +2,11 @@ package de.easygolfstats.file;
 
 import androidx.annotation.WorkerThread;
 
+import org.threeten.bp.LocalDate;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -22,7 +24,7 @@ import de.easygolfstats.types.HitCategory;
 public class HitsPerClubController {
     private static String FILE_SUFFIX = ".csv";
     private static String HITS_FILENAME_ACTIVE = "hits_active";
-    private static String HITS_FILENAME_FINISHED_TEMPLATE = "hits_archived_";
+    private static String HITS_FILENAME_FINISHED = "hits_archived_";
     private static int CATEGORY_POS = 0;
     private static int CLUB_NAME_POS = 1;
     private static int QUALITY_GOOD_COUNTER_POS = 2;
@@ -31,10 +33,12 @@ public class HitsPerClubController {
     private static String CSV_SEPARATOR = ";";
 
     private static HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap;
+    private static String baseDirectory = "";
     private static String fileDirectory = "";
 
 
     public static void initDataDirectory(String baseDirectory, String dataDirectory) {
+        HitsPerClubController.baseDirectory = baseDirectory;
         HitsPerClubController.fileDirectory = baseDirectory + "/" + dataDirectory;
         CsvFile.createDirectory(baseDirectory, dataDirectory);
     }
@@ -53,7 +57,7 @@ public class HitsPerClubController {
 
     public static void finishStatistic () {
         String activeFileName = HITS_FILENAME_ACTIVE + FILE_SUFFIX;
-        String archiveFileName = HITS_FILENAME_FINISHED_TEMPLATE + new Date().toString() + FILE_SUFFIX;
+        String archiveFileName = HITS_FILENAME_FINISHED + LocalDate.now().toString() + FILE_SUFFIX;
 
         CsvFile.renameFile(fileDirectory, activeFileName, archiveFileName);
     }
@@ -98,11 +102,11 @@ public class HitsPerClubController {
         return readHitsFromFile(HITS_FILENAME_ACTIVE);
     }
     
-    public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromHistoryFile(String fileNamePrefix) {
+    public static HashMap<HitCategory, ArrayList<HitsPerClub>> readHitsFromHistoryFile(String fileNamePrefix) {
         return readHitsFromFile(fileNamePrefix);
     }
 
-    private static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileNamePrefix) {
+    private static HashMap<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileNamePrefix) {
         // Get items from file
         String filePath = fileDirectory + "/" + fileNamePrefix + FILE_SUFFIX;
         hitMap = new HashMap<>();
@@ -161,6 +165,29 @@ public class HitsPerClubController {
         writeHitsToFile(hitMap);
     }
 
+    public static ArrayList<String> getHistoryFileNames() {
+        ArrayList<String> historyFileNames = new ArrayList<>();
+
+        Iterator<String> it = listFilesForFolder(new File(fileDirectory)).iterator();
+        while (it.hasNext()) {
+            String fileName = it.next();
+            if (fileName.contains(HITS_FILENAME_FINISHED)) {
+                historyFileNames.add(fileName);
+            }
+        }
+        return historyFileNames;
+    }
+
+    private static ArrayList<String> listFilesForFolder(final File folder) {
+        ArrayList<String> fileNames = new ArrayList<>();
+        for (final File fileEntry : folder.listFiles()) {
+            if (!fileEntry.isDirectory()) {
+                fileNames.add(fileEntry.getName());
+            }
+        }
+        return fileNames;
+    }
+
     public static ArrayList<HitsPerClub> copyHitsPerClubFromFile(ArrayList<HitsPerClub>  destList) {
         destList.addAll(getHitsPerClubFromFile());
         return destList;
@@ -209,10 +236,15 @@ public class HitsPerClubController {
         hitMap.put(HitCategory.REGULAR, hitsPerClubs);
         writeHitsToFile(hitMap);
     }
+
+    public static void deleteHistoryFile(String fileName) {
+        CsvFile.deleteFile(baseDirectory, fileName);
+    }
     
-    public static Date extractDateFromArchivedFileName(String fileName) {
-        String dateAsString = fileName.substr(0, fileName.indexOf(FILE_SUFFIX));
-        dateAsString = dateAsString.substr(dateAsString.indexOf(HITS_FILENAME_FINISHED_TEMPLATE) + length(HITS_FILENAME_FINISHED_TEMPLATE)+1);
-        Date returnDate = Date.parse(dateAsString);
+    public static LocalDate extractDateFromArchivedFileName(String fileName) {
+        String dateAsString = fileName.substring(0, fileName.indexOf(FILE_SUFFIX));
+        dateAsString = dateAsString.substring(dateAsString.indexOf(HITS_FILENAME_FINISHED) + HITS_FILENAME_FINISHED.length() +1);
+        LocalDate parsedDate = LocalDate.parse(dateAsString);
+        return parsedDate;
     }
 }

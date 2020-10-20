@@ -37,6 +37,10 @@ public class CsvFile {
         return new File(fileDirectory + "/" + fileName).exists();
     }
 
+    public static void deleteFile(String fileDirectory, String fileName) {
+        new File(fileDirectory + "/" + fileName).delete();
+    }
+
     /**
      * Delivers the lines of a CSV file as a List of String-Arrays ([]).
      * The size resp. length of the Strings[] can vary between every line.

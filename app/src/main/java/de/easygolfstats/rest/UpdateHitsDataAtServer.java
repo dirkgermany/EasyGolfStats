@@ -1,8 +1,8 @@
 package de.easygolfstats.rest;
 
-import java.time.LocalDate;
+import org.threeten.bp.LocalDate;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -15,10 +15,10 @@ import de.easygolfstats.types.HitCategory;
 
 public class UpdateHitsDataAtServer {
 
-    Diese Klasse mit Timer versehen, der den Datenabgleich regelmäßig anstößt
+    // TODO: 20.10.20    Diese Klasse mit Timer versehen, der den Datenabgleich regelmäßig anstößt
 
     private void updateAtServer() {
-        List<String> historyFileList = HitsPerClubController.getHistoryFiles();
+        List<String> historyFileList = HitsPerClubController.getHistoryFileNames();
 
         Iterator<String> it = historyFileList.iterator();
         while (it.hasNext()) {
@@ -26,7 +26,7 @@ public class UpdateHitsDataAtServer {
 
             HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap = HitsPerClubController.readHitsFromHistoryFile(fileName);
             if (null != hitMap && !hitMap.isEmpty()) {
-                Date sessionDate = HitsPerClubController.extractDateFromArchivedFileName(fileName);
+                LocalDate sessionDate = HitsPerClubController.extractDateFromArchivedFileName(fileName);
                 processMap(sessionDate, hitMap);
             }
 
@@ -37,8 +37,7 @@ public class UpdateHitsDataAtServer {
 
     }
 
-    private void processMap(Date sessionDate, HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap) {
-        Long userId =
+    private void processMap(LocalDate sessionDate, HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap) {
         Iterator<Map.Entry<HitCategory, ArrayList<HitsPerClub>>> itMap = hitMap.entrySet().iterator();
         ArrayList<Hits> hitsList = new ArrayList<>();
 
@@ -50,7 +49,7 @@ public class UpdateHitsDataAtServer {
                 Hits hits = new Hits();
                 HitsPerClub hitsPerClub = itArray.next();
 
-                hits.setUserId(XXX);
+                hits.setUserId(RestCommunication.getInstance().getUserId());
                 hits.setHitCategory(hitCategory);
                 hits.setClubType(hitsPerClub.getClub().getClubType());
                 hits.setSessionDate(sessionDate);
