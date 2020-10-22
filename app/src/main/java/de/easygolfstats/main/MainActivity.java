@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 
     private ArrayList<HitsPerClub> hitsPerClubList;
     private RecyclerView rvHitsPerClub;
-    private RestCommunication restCommunication;
+    SynchronizeClientServerData synchronizer;
 
     private String fileDirectory;
     private Logger logger;
@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
         logger.finest("newPeriod", "NEW Button was clicked");
 
         HitsPerClubController.finishStatistic();
+        synchronizer.updateAtServer();
 
         hitsPerClubList.clear();
         rvHitsPerClub.getAdapter().notifyDataSetChanged();
@@ -221,16 +222,8 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
                 layoutManager.getOrientation());
         rvHitsPerClub.addItemDecoration(dividerItemDecoration);
 
-//        Settings settings = new Settings(basePath + "/app.properties");
-//        String protocol
-
-//        "http://84.44.128.8:9090/easy_golf_stats/
-
-//        AndroidNetworking.initialize(getApplicationContext());
-//        AndroidNetworking.setParserFactory(new JacksonParserFactory());
-
-        SynchronizeClientServerData synchronizer = new SynchronizeClientServerData(getApplicationContext(), basePath);
-        synchronizer.login();
+        synchronizer = new SynchronizeClientServerData(getApplicationContext(), basePath);
+        synchronizer.getClubs();
 
     }
 }

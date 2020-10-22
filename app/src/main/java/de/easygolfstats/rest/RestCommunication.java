@@ -1,7 +1,9 @@
 package de.easygolfstats.rest;
 
-import android.accounts.NetworkErrorException;
 import android.content.Context;
+import android.telecom.Call;
+
+import androidx.annotation.WorkerThread;
 
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
@@ -10,23 +12,20 @@ import com.androidnetworking.interfaces.JSONArrayRequestListener;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.jacksonandroidnetworking.JacksonParserFactory;
 
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.threeten.bp.LocalDate;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.Executors;
 
 import de.easygolfstats.Exception.EgsRestException;
-import de.easygolfstats.file.Settings;
-import de.easygolfstats.model.Club;
-import de.easygolfstats.model.Hits;
+import de.easygolfstats.types.CallbackResult;
 
 public class RestCommunication {
     private static RestCommunication instance;
     private RestCallbackListener restCallbackListener;
+    private int requestIdCounter = 0;
 
     private RestCommunication(Context context) {
         AndroidNetworking.initialize(context);
@@ -50,7 +49,10 @@ public class RestCommunication {
         return this.restCallbackListener;
     }
 
-    public void sendPostLogin(String URL, String userName, String password) throws EgsRestException {
+    @WorkerThread
+    public int sendPostLogin(String URL, String userName, String password) throws EgsRestException {
+        final int requestId = requestIdCounter++;
+
         if (null == userName || userName.isEmpty() || null == password || password.isEmpty()) {
             throw new EgsRestException("userName or password is empty");
         }
@@ -68,6 +70,7 @@ public class RestCommunication {
                 .setContentType("application/json")
                 .setTag("login")
                 .setPriority(Priority.HIGH)
+                .setExecutor(Executors.newSingleThreadExecutor())
                 .build()
                 .getAsJSONObject(new JSONObjectRequestListener() {
                     @Override
@@ -79,68 +82,81 @@ public class RestCommunication {
                                 Long userId = new Long((Integer) response.get("userId"));
                                 String tokenId = (String) response.get("tokenId");
                                 String serviceName = (String)response.get("serviceName");
-                                getRestCallbackListener().CallbackLoginResponse(result, tokenId, userId, serviceName);
+                                getRestCallbackListener().CallbackLoginResponse(requestId, CallbackResult.OK, result, tokenId, userId, serviceName);
                             }
                         } catch (JSONException e) {
-                            getRestCallbackListener().CallbackLoginResponse("ERR", null, null, null);
+                            getRestCallbackListener().CallbackLoginResponse(requestId, CallbackResult.JSON_EXCEPTION, "ERR", null, null, null);
                         }
                     }
 
                     @Override
                     public void onError(ANError anError) {
-                        getRestCallbackListener().CallbackLoginResponse("ERR", null, null, null);
-                        System.out.println(anError.getErrorBody());
+                        getRestCallbackListener().CallbackLoginResponse(requestId, CallbackResult.AN_ERROR, "ERR", null, null, null);
                     }
                 });
+
+        return requestId;
     }
 
 
-    public void sendPostHitsRequest(String URL, String path, String tokenId, JSONArray hits, final String fileName) {
+    public int sendPostHitsRequest(String URL, String path, String tokenId, JSONArray hits, final String fileName) throws  EgsRestException {
+        final int requestId = requestIdCounter++;
+
         AndroidNetworking.post(URL + "/" + path + "/" + "createHitsCollection/")
                 .addJSONArrayBody(hits) // posting json
                 .addHeaders("tokenId", tokenId)
                 .addHeaders("fileName", fileName)
                 .setTag("postHits")
                 .setPriority(Priority.MEDIUM)
+                .setExecutor(Executors.newSingleThreadExecutor())
                 .build()
                 .getAsJSONArray(new JSONArrayRequestListener() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        getRestCallbackListener().CallbackPostHitsResponse("OK", fileName);
+                        getRestCallbackListener().CallbackPostHitsResponse(requestId, CallbackResult.OK, "OK", fileName);
                     }
 
                     @Override
                     public void onError(ANError error) {
-                        // handle error
+                        getRestCallbackListener().CallbackPostHitsResponse(requestId, CallbackResult.AN_ERROR, "ERR", fileName);
                     }
                 });
+
+        return requestId;
     }
 
-    public void sendGetClubRequest(String URL, String path, String tokenId, Long userId) throws EgsRestException {
+    public int sendGetClubRequest(String URL, String path, String tokenId, Long userId) throws EgsRestException {
+        final int requestId = requestIdCounter++;
+
         AndroidNetworking.get(URL + "/" + path + "/" + "listClubs/")
                 .addHeaders("tokenId", tokenId)
                 .addHeaders("userId", String.valueOf(userId))
                 .setTag("getClubs")
                 .setPriority(Priority.LOW)
+                .setExecutor(Executors.newSingleThreadExecutor())
                 .build()
                 .getAsJSONObject(new JSONObjectRequestListener() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        getRestCallbackListener().CallbackGetClubResponse("OK", response);
+                        getRestCallbackListener().CallbackGetClubResponse(requestId, CallbackResult.OK, "OK", response);
                     }
 
                     @Override
                     public void onError(ANError anError) {
-                        getRestCallbackListener().CallbackGetClubResponse("ERR", null);
+                        getRestCallbackListener().CallbackGetClubResponse(requestId, CallbackResult.AN_ERROR, "ERR", null);
                     }
                 });
+        return requestId;
     }
 
-    public void sendPingRequest(String URL, String path, String tokenId) {
+    public int sendPingRequest(String URL, String path, String tokenId) throws EgsRestException{
+        final int requestId = requestIdCounter++;
+
         AndroidNetworking.get(URL + "/" + path + "/" + "ping/")
                 .addHeaders("tokenId", tokenId)
                 .setTag("ping")
                 .setPriority(Priority.HIGH)
+                .setExecutor(Executors.newSingleThreadExecutor())
                 .build()
                 .getAsJSONObject(new JSONObjectRequestListener() {
                     @Override
@@ -149,19 +165,20 @@ public class RestCommunication {
                         try {
                             String status = response.getString("status");
                             if (status.equalsIgnoreCase("OK")) {
-                                getRestCallbackListener().CallbackPingResponse(status, response.getString("serviceName"),
+                                getRestCallbackListener().CallbackPingResponse(requestId, CallbackResult.OK,  status, response.getString("serviceName"),
                                         response.getString("hostName"), response.getString("hostAddress"),
                                         response.getString("port"), LocalDate.parse(response.getString("systime")), response.getString("upTime"));
                             }
                         } catch (JSONException e) {
-                            getRestCallbackListener().CallbackPingResponse(e.getMessage(), "", "", "", "", null, "");
+                            getRestCallbackListener().CallbackPingResponse(requestId, CallbackResult.JSON_EXCEPTION, e.getMessage(), "", "", "", "", null, "");
                         }
                     }
 
                     @Override
                     public void onError(ANError anError) {
-                        getRestCallbackListener().CallbackPingResponse(anError.getMessage(), "", "", "", "", null, "");
+                        getRestCallbackListener().CallbackPingResponse(requestId, CallbackResult.AN_ERROR, anError.getMessage(), "", "", "", "", null, "");
                     }
                 });
+        return requestId;
     }
 }

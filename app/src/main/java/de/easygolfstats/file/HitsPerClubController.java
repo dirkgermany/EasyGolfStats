@@ -55,11 +55,12 @@ public class HitsPerClubController {
         return CsvFile.fileExists(fileDirectory, HITS_FILENAME_ACTIVE + FILE_SUFFIX);
     }
 
-    public static void finishStatistic () {
+    public static String finishStatistic () {
         String activeFileName = HITS_FILENAME_ACTIVE + FILE_SUFFIX;
         String archiveFileName = HITS_FILENAME_FINISHED + LocalDate.now().toString() + FILE_SUFFIX;
 
         CsvFile.renameFile(fileDirectory, activeFileName, archiveFileName);
+        return archiveFileName;
     }
 
     public static void setHitsPerClubAndCat(HitCategory category, Club club, HitsPerClub hitsPerClub) {
@@ -99,16 +100,16 @@ public class HitsPerClubController {
     }
     
     public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromActiveFile() {
-        return readHitsFromFile(HITS_FILENAME_ACTIVE);
+        return readHitsFromFile(HITS_FILENAME_ACTIVE + FILE_SUFFIX);
     }
     
-    public static HashMap<HitCategory, ArrayList<HitsPerClub>> readHitsFromHistoryFile(String fileNamePrefix) {
-        return readHitsFromFile(fileNamePrefix);
+    public static HashMap<HitCategory, ArrayList<HitsPerClub>> readHitsFromHistoryFile(String fileName) {
+        return readHitsFromFile(fileName);
     }
 
-    private static HashMap<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileNamePrefix) {
+    private static HashMap<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileName) {
         // Get items from file
-        String filePath = fileDirectory + "/" + fileNamePrefix + FILE_SUFFIX;
+        String filePath = fileDirectory + "/" + fileName ;
         hitMap = new HashMap<>();
 
         List<ArrayList<String>> csvLines = CsvFile.readFile(filePath, CSV_SEPARATOR);
