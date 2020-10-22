@@ -19,61 +19,52 @@ import org.threeten.bp.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.easygolfstats.Exception.EgsRestException;
 import de.easygolfstats.file.Settings;
 import de.easygolfstats.model.Club;
 import de.easygolfstats.model.Hits;
-import de.easygolfstats.types.ClubType;
 
 public class RestCommunication {
     private static RestCommunication instance;
-    private String URL;
-    private String path;
-    private List<Club> clubs = new ArrayList<>();
-    private boolean pingSuccess = true;
-    private Long userId;
-    private String tokenId;
-    private Settings settings;
+    private RestCallbackListener restCallbackListener;
 
-    private RestCommunication(Context context, String basePath) {
+    private RestCommunication(Context context) {
         AndroidNetworking.initialize(context);
         AndroidNetworking.setParserFactory(new JacksonParserFactory());
 
-        settings = new Settings(basePath + "/app.properties");
-        String protocol = settings.getValue("protocol", "http");
-        String address = settings.getValue("address", "84.44.128.8");
-        String port = settings.getValue("port", "9090");
-
-        this.path = settings.getValue("path", "easy_golf_stats");
-        this.URL = protocol + "://" + address + ":" + port;
     }
 
-    public static void init(Context context, String basePath) {
-        instance = new RestCommunication(context, basePath);
+    public static void init(Context context) {
+        instance = new RestCommunication(context);
     }
 
     public static RestCommunication getInstance() {
         return instance;
     }
 
-    private void login() {
-        String userName = settings.getValue("userName", "dirk");
-        String password = settings.getValue("password", "");
+    public void setRegisterListener (RestCallbackListener restCallbackListener) {
+        getInstance().restCallbackListener = restCallbackListener;
+    }
 
+    private RestCallbackListener getRestCallbackListener () {
+        return this.restCallbackListener;
+    }
+
+    public void sendPostLogin(String URL, String userName, String password) throws EgsRestException {
         if (null == userName || userName.isEmpty() || null == password || password.isEmpty()) {
-            return;
+            throw new EgsRestException("userName or password is empty");
         }
 
-        JSONObject bla = new JSONObject();
+        JSONObject loginData = new JSONObject();
         try {
-            bla.put("userName", userName);
-            bla.put("password", password);
+            loginData.put("userName", userName);
+            loginData.put("password", password);
         } catch (JSONException e) {
-            e.printStackTrace();
+            throw new EgsRestException(e.getMessage());
         }
 
         AndroidNetworking.post(URL + "/" + "login/")
-                .addApplicationJsonBody(bla)
-                .addJSONObjectBody(bla)
+                .addJSONObjectBody(loginData)
                 .setContentType("application/json")
                 .setTag("login")
                 .setPriority(Priority.HIGH)
@@ -83,77 +74,39 @@ public class RestCommunication {
                     public void onResponse(JSONObject response) {
                         // Login ist angekommen
                         try {
-                            if (((String) response.get("result")).equalsIgnoreCase("OK")) {
-                                userId = new Long((Integer) response.get("userId"));
-                                tokenId = (String) response.get("tokenId");
+                            String result = (String) response.get("result");
+                            if (result.equalsIgnoreCase("OK")) {
+                                Long userId = new Long((Integer) response.get("userId"));
+                                String tokenId = (String) response.get("tokenId");
+                                String serviceName = (String)response.get("serviceName");
+                                getRestCallbackListener().CallbackLoginResponse(result, tokenId, userId, serviceName);
                             }
                         } catch (JSONException e) {
-                            userId = null;
-                            tokenId = null;
+                            getRestCallbackListener().CallbackLoginResponse("ERR", null, null, null);
                         }
                     }
 
                     @Override
                     public void onError(ANError anError) {
+                        getRestCallbackListener().CallbackLoginResponse("ERR", null, null, null);
                         System.out.println(anError.getErrorBody());
                     }
                 });
-
     }
 
-    public void ping() throws NetworkErrorException {
-        sendPingRequest();
-        if (!pingSuccess) {
-            throw new NetworkErrorException("PING an Easy Golf Stats Service nicht erfolgreich");
-        }
-    }
 
-    public boolean writeHitsList(LocalDate sessionDate, List<Hits> hits) {
-        JSONArray jsonArray = new JSONArray(hits);
-        sendPostHitsRequest(jsonArray);
-        return false;
-
-    }
-
-    public ArrayList<Club> getClubs() {
-        login();
-        return null;
-//        sendGetClubRequest();
-//        return (ArrayList<Club>) this.clubs;
-    }
-
-    private void prepareGetClubResponse(JSONObject jsonObject) {
-        try {
-            JSONArray jsonArray = jsonObject.getJSONArray("clubs");
-            if (null != jsonArray) {
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject clubObject = (JSONObject) jsonArray.get(i);
-                    Long _id = clubObject.getLong("_id");
-                    String clubName = clubObject.getString("clubName");
-                    ClubType clubType = ClubType.valueOf(clubObject.getString("clubType"));
-                    Integer clubIndex = clubObject.getInt("clubIndex");
-                    Club club = new Club(_id, clubName, clubType, clubIndex);
-
-                    clubs.add(club);
-                }
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private boolean sendPostHitsRequest(JSONArray hits) {
+    public void sendPostHitsRequest(String URL, String path, String tokenId, JSONArray hits, final String fileName) {
         AndroidNetworking.post(URL + "/" + path + "/" + "createHitsCollection/")
                 .addJSONArrayBody(hits) // posting json
-                .addHeaders("tokenId", this.tokenId)
+                .addHeaders("tokenId", tokenId)
+                .addHeaders("fileName", fileName)
                 .setTag("postHits")
                 .setPriority(Priority.MEDIUM)
                 .build()
                 .getAsJSONArray(new JSONArrayRequestListener() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        // do anything with response
+                        getRestCallbackListener().CallbackPostHitsResponse("OK", fileName);
                     }
 
                     @Override
@@ -161,35 +114,31 @@ public class RestCommunication {
                         // handle error
                     }
                 });
-        return false;
     }
 
-    private void sendGetClubRequest() {
+    public void sendGetClubRequest(String URL, String path, String tokenId, Long userId) throws EgsRestException {
         AndroidNetworking.get(URL + "/" + path + "/" + "listClubs/")
-                .addHeaders("tokenId", this.tokenId)
-                .addHeaders("userId", String.valueOf(this.userId))
+                .addHeaders("tokenId", tokenId)
+                .addHeaders("userId", String.valueOf(userId))
                 .setTag("getClubs")
                 .setPriority(Priority.LOW)
                 .build()
                 .getAsJSONObject(new JSONObjectRequestListener() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        prepareGetClubResponse(response);
+                        getRestCallbackListener().CallbackGetClubResponse("OK", response);
                     }
 
                     @Override
                     public void onError(ANError anError) {
-                        System.out.println(anError.getErrorBody());
+                        getRestCallbackListener().CallbackGetClubResponse("ERR", null);
                     }
                 });
-
     }
 
-    private void sendPingRequest() throws NetworkErrorException {
-        pingSuccess = true;
-
+    public void sendPingRequest(String URL, String path, String tokenId) {
         AndroidNetworking.get(URL + "/" + path + "/" + "ping/")
-                .addHeaders("tokenId", this.tokenId)
+                .addHeaders("tokenId", tokenId)
                 .setTag("ping")
                 .setPriority(Priority.HIGH)
                 .build()
@@ -198,22 +147,21 @@ public class RestCommunication {
                     public void onResponse(JSONObject response) {
                         // PING ist angekommen
                         try {
-                            if (((String) response.get("status")).equalsIgnoreCase("OK")) {
-                                pingSuccess = true;
+                            String status = response.getString("status");
+                            if (status.equalsIgnoreCase("OK")) {
+                                getRestCallbackListener().CallbackPingResponse(status, response.getString("serviceName"),
+                                        response.getString("hostName"), response.getString("hostAddress"),
+                                        response.getString("port"), LocalDate.parse(response.getString("systime")), response.getString("upTime"));
                             }
                         } catch (JSONException e) {
-                            pingSuccess = false;
+                            getRestCallbackListener().CallbackPingResponse(e.getMessage(), "", "", "", "", null, "");
                         }
                     }
 
                     @Override
                     public void onError(ANError anError) {
-                        System.out.println(anError.getErrorBody());
+                        getRestCallbackListener().CallbackPingResponse(anError.getMessage(), "", "", "", "", null, "");
                     }
                 });
-    }
-
-    public Long getUserId() {
-        return userId;
     }
 }

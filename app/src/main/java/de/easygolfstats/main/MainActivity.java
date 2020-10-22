@@ -25,6 +25,7 @@ import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
 import de.easygolfstats.model.HitsPerClub;
 import de.easygolfstats.rest.RestCommunication;
+import de.easygolfstats.rest.SynchronizeClientServerData;
 import de.easygolfstats.types.HitCategory;
 
 public class MainActivity extends AppCompatActivity implements HitsPerClubAdapter.ItemClickListener {
@@ -228,8 +229,8 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 //        AndroidNetworking.initialize(getApplicationContext());
 //        AndroidNetworking.setParserFactory(new JacksonParserFactory());
 
-        RestCommunication.init(getApplicationContext(), basePath);
-        RestCommunication.getInstance().getClubs();
+        SynchronizeClientServerData synchronizer = new SynchronizeClientServerData(getApplicationContext(), basePath);
+        synchronizer.login();
 
     }
 }
