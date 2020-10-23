@@ -154,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     public void onDestroy() {
         super.onDestroy();
         logger.info("onDestroy", "Anwendung wird beendet.");
+        RestCommunication.getInstance().forceCancelRequests();
     }
 
     @Override
@@ -162,9 +163,6 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
         logger.fine("onResume", "Anwendung wurde in den Vordergrund geholt");
     }
 
-    /**
-     * To keep the switch from MapTrip to this view simple, this App is a singleTask (see Manifest)
-     */
     @SuppressLint("WrongThread")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
