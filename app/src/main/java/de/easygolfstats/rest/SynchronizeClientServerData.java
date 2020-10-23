@@ -3,11 +3,15 @@ package de.easygolfstats.rest;
 import android.accounts.NetworkErrorException;
 import android.content.Context;
 
+import com.google.gson.Gson;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.threeten.bp.LocalDate;
+import org.threeten.bp.LocalDateTime;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,7 +46,6 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
     public void init(Context context, String basePath) {
         RestCommunication.init(context);
-        RestCommunication.getInstance().setRegisterListener(this);
 
         settings = new Settings(basePath + "/app.properties");
         String protocol = settings.getValue("protocol", "http");
@@ -59,7 +62,7 @@ public class SynchronizeClientServerData implements RestCallbackListener {
         final String password = settings.getValue("password", "");
 
         try {
-            int requestId = RestCommunication.getInstance().sendPostLogin(this.URL, userName, password);
+            int requestId = RestCommunication.getInstance().sendPostLogin(this, this.URL, userName, password);
             return CallbackSynchronizer.wait(requestId, "LOGIN", 5000L);
         } catch (EgsRestException e) {
             e.printStackTrace();
@@ -70,7 +73,7 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
     private CallbackResult ping() {
         try {
-            int requestId = RestCommunication.getInstance().sendPingRequest(this.URL, this.path, this.tokenId);
+            int requestId = RestCommunication.getInstance().sendPingRequest(this, this.URL, this.path, this.tokenId);
             return CallbackSynchronizer.wait(requestId, "PING", 5000L);
         } catch (EgsRestException e) {
             e.printStackTrace();
@@ -78,16 +81,27 @@ public class SynchronizeClientServerData implements RestCallbackListener {
         return CallbackResult.ERR_UNKNOWN;
     }
 
-    public CallbackResult writeHitsList(LocalDate sessionDate, List<Hits> hits, String fileName) {
+    public CallbackResult writeHitsList(LocalDateTime sessionDate, List<Hits> hits, String fileName) {
         if (!ping().equals(CallbackResult.OK)) {
             CallbackResult loginResult = login();
             if (!loginResult.equals(CallbackResult.OK)) {
                 return loginResult;
             }
+        }
 
-            JSONArray jsonArray = new JSONArray(hits);
+        JSONArray jsonArray = new JSONArray();
+        Iterator<Hits> it = hits.iterator();
+        while (it.hasNext()) {
+            Hits hitEntry = it.next();
+            if (hitEntry.clubUsed()) {
+                JSONObject jsonObject = hitEntry.getAsJsonObject();
+                jsonArray.put(jsonObject);
+            }
+        }
+        if (jsonArray.length() != 0) {
+            // hits in file, some values <> 0
             try {
-                int requestId = RestCommunication.getInstance().sendPostHitsRequest(this.URL, this.path, this.tokenId, jsonArray, fileName);
+                int requestId = RestCommunication.getInstance().sendPostHitsRequest(this, this.URL, this.path, this.tokenId, jsonArray, fileName);
                 CallbackResult waitResult = CallbackSynchronizer.wait(requestId, "WRITE_HITS_LIST", 5000L);
                 if (!CallbackResult.OK.equals(waitResult)) {
                     return waitResult;
@@ -110,7 +124,7 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
             this.clubs = new ArrayList<>();
             try {
-                int requestId = RestCommunication.getInstance().sendGetClubRequest(this.URL, this.path, this.tokenId, this.userId);
+                int requestId = RestCommunication.getInstance().sendGetClubRequest(this, this.URL, this.path, this.tokenId, this.userId);
                 CallbackResult waitResult = CallbackSynchronizer.wait(requestId, "GET_CLUBS", 5000L);
                 if (!CallbackResult.OK.equals(waitResult)) {
                     return null;
@@ -132,13 +146,13 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
             HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap = HitsPerClubController.readHitsFromHistoryFile(fileName);
             if (null != hitMap && !hitMap.isEmpty()) {
-                LocalDate sessionDate = HitsPerClubController.extractDateFromArchivedFileName(fileName);
+                LocalDateTime sessionDate = HitsPerClubController.extractDateFromArchivedFileName(fileName);
                 processMap(sessionDate, hitMap, fileName);
             }
         }
     }
 
-    private void processMap(LocalDate sessionDate, HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap, String fileName) {
+    private void processMap(LocalDateTime sessionDate, HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap, String fileName) {
         Iterator<Map.Entry<HitCategory, ArrayList<HitsPerClub>>> itMap = hitMap.entrySet().iterator();
         ArrayList<Hits> hitsList = new ArrayList<>();
 
@@ -163,7 +177,7 @@ public class SynchronizeClientServerData implements RestCallbackListener {
         }
 
         if (null != hitsList && !hitsList.isEmpty()) {
-                writeHitsList(sessionDate, hitsList, fileName);
+            writeHitsList(sessionDate, hitsList, fileName);
         }
     }
 
@@ -205,7 +219,7 @@ public class SynchronizeClientServerData implements RestCallbackListener {
     }
 
     @Override
-    public void CallbackPingResponse(int requestId, CallbackResult callbackResult, String status, String serviceName, String hostName, String hostAddress, String port, LocalDate serverSysDate, String upTime) {
+    public void CallbackPingResponse(int requestId, CallbackResult callbackResult, String status, String serviceName, String hostName, String hostAddress, String port, LocalDateTime serverSysDateTime, String upTime) {
         CallbackSynchronizer.callBackCalled(requestId, callbackResult, "Ping");
     }
 }

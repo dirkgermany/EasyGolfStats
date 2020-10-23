@@ -1,9 +1,6 @@
 package de.easygolfstats.rest;
 
 import android.content.Context;
-import android.telecom.Call;
-
-import androidx.annotation.WorkerThread;
 
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
@@ -15,7 +12,7 @@ import com.jacksonandroidnetworking.JacksonParserFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.threeten.bp.LocalDate;
+import org.threeten.bp.LocalDateTime;
 
 import java.util.concurrent.Executors;
 
@@ -24,7 +21,6 @@ import de.easygolfstats.types.CallbackResult;
 
 public class RestCommunication {
     private static RestCommunication instance;
-    private RestCallbackListener restCallbackListener;
     private int requestIdCounter = 0;
 
     private RestCommunication(Context context) {
@@ -41,23 +37,17 @@ public class RestCommunication {
         return instance;
     }
 
-    public void setRegisterListener (RestCallbackListener restCallbackListener) {
-        getInstance().restCallbackListener = restCallbackListener;
-    }
-
-    private RestCallbackListener getRestCallbackListener () {
-        return this.restCallbackListener;
-    }
-    
     public void forceCancelRequests() {
         AndroidNetworking.forceCancelAll();
     }
 
-    public int sendPostLogin(String URL, String userName, String password) throws EgsRestException {
+    public int sendPostLogin(RestCallbackListener callbackListener, String URL, String userName, String password) throws EgsRestException {
         final int requestId = requestIdCounter++;
+        final RestCallbackListener caller = callbackListener;
 
         if (null == userName || userName.isEmpty() || null == password || password.isEmpty()) {
-            throw new EgsRestException("userName or password is empty");
+            callbackListener.CallbackLoginResponse(requestId, CallbackResult.MISSING_VALUE, "ERR", null, null, null);
+            return requestId;
         }
 
         JSONObject loginData = new JSONObject();
@@ -65,7 +55,8 @@ public class RestCommunication {
             loginData.put("userName", userName);
             loginData.put("password", password);
         } catch (JSONException e) {
-            throw new EgsRestException(e.getMessage());
+            callbackListener.CallbackLoginResponse(requestId, CallbackResult.JSON_EXCEPTION, "ERR", null, null, null);
+            return requestId;
         }
 
         AndroidNetworking.post(URL + "/" + "login/")
@@ -85,16 +76,16 @@ public class RestCommunication {
                                 Long userId = new Long((Integer) response.get("userId"));
                                 String tokenId = (String) response.get("tokenId");
                                 String serviceName = (String)response.get("serviceName");
-                                getRestCallbackListener().CallbackLoginResponse(requestId, CallbackResult.OK, result, tokenId, userId, serviceName);
+                                caller.CallbackLoginResponse(requestId, CallbackResult.OK, result, tokenId, userId, serviceName);
                             }
                         } catch (JSONException e) {
-                            getRestCallbackListener().CallbackLoginResponse(requestId, CallbackResult.JSON_EXCEPTION, "ERR", null, null, null);
+                            caller.CallbackLoginResponse(requestId, CallbackResult.JSON_EXCEPTION, "ERR", null, null, null);
                         }
                     }
 
                     @Override
                     public void onError(ANError anError) {
-                        getRestCallbackListener().CallbackLoginResponse(requestId, CallbackResult.AN_ERROR, "ERR", null, null, null);
+                        caller.CallbackLoginResponse(requestId, CallbackResult.AN_ERROR, "ERR", null, null, null);
                     }
                 });
 
@@ -102,8 +93,9 @@ public class RestCommunication {
     }
 
 
-    public int sendPostHitsRequest(String URL, String path, String tokenId, JSONArray hits, final String fileName) throws  EgsRestException {
+    public int sendPostHitsRequest(RestCallbackListener callbackListener, String URL, String path, String tokenId, JSONArray hits, final String fileName) throws  EgsRestException {
         final int requestId = requestIdCounter++;
+        final RestCallbackListener caller = callbackListener;
 
         AndroidNetworking.post(URL + "/" + path + "/" + "createHitsCollection/")
                 .addJSONArrayBody(hits) // posting json
@@ -113,23 +105,24 @@ public class RestCommunication {
                 .setPriority(Priority.MEDIUM)
                 .setExecutor(Executors.newSingleThreadExecutor())
                 .build()
-                .getAsJSONArray(new JSONArrayRequestListener() {
+                .getAsJSONObject(new JSONObjectRequestListener() {
                     @Override
-                    public void onResponse(JSONArray response) {
-                        getRestCallbackListener().CallbackPostHitsResponse(requestId, CallbackResult.OK, "OK", fileName);
+                    public void onResponse(JSONObject response) {
+                        caller.CallbackPostHitsResponse(requestId, CallbackResult.OK, "OK", fileName);
                     }
 
                     @Override
                     public void onError(ANError error) {
-                        getRestCallbackListener().CallbackPostHitsResponse(requestId, CallbackResult.AN_ERROR, "ERR", fileName);
+                        caller.CallbackPostHitsResponse(requestId, CallbackResult.AN_ERROR, "ERR", fileName);
                     }
                 });
 
         return requestId;
     }
 
-    public int sendGetClubRequest(String URL, String path, String tokenId, Long userId) throws EgsRestException {
+    public int sendGetClubRequest(RestCallbackListener callbackListener, String URL, String path, String tokenId, Long userId) throws EgsRestException {
         final int requestId = requestIdCounter++;
+        final RestCallbackListener caller = callbackListener;
 
         AndroidNetworking.get(URL + "/" + path + "/" + "listClubs/")
                 .addHeaders("tokenId", tokenId)
@@ -141,19 +134,25 @@ public class RestCommunication {
                 .getAsJSONObject(new JSONObjectRequestListener() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        getRestCallbackListener().CallbackGetClubResponse(requestId, CallbackResult.OK, "OK", response);
+                        caller.CallbackGetClubResponse(requestId, CallbackResult.OK, "OK", response);
                     }
 
                     @Override
                     public void onError(ANError anError) {
-                        getRestCallbackListener().CallbackGetClubResponse(requestId, CallbackResult.AN_ERROR, "ERR", null);
+                        caller.CallbackGetClubResponse(requestId, CallbackResult.AN_ERROR, "ERR", null);
                     }
                 });
         return requestId;
     }
 
-    public int sendPingRequest(String URL, String path, String tokenId) throws EgsRestException{
+    public int sendPingRequest(final RestCallbackListener callbackListener, String URL, String path, String tokenId) throws EgsRestException{
         final int requestId = requestIdCounter++;
+        final RestCallbackListener caller = callbackListener;
+
+        if (null == tokenId || tokenId.isEmpty()) {
+            callbackListener.CallbackPingResponse(requestId, CallbackResult.MISSING_VALUE, "ERR", null, null, null, null, null, null);
+            return requestId;
+        }
 
         AndroidNetworking.get(URL + "/" + path + "/" + "ping/")
                 .addHeaders("tokenId", tokenId)
@@ -168,20 +167,29 @@ public class RestCommunication {
                         try {
                             String status = response.getString("status");
                             if (status.equalsIgnoreCase("OK")) {
-                                getRestCallbackListener().CallbackPingResponse(requestId, CallbackResult.OK,  status, response.getString("serviceName"),
+
+                                caller.CallbackPingResponse(requestId, CallbackResult.OK,  status, responseGetStringSafe(response, "serviceName"),
                                         response.getString("hostName"), response.getString("hostAddress"),
-                                        response.getString("port"), LocalDate.parse(response.getString("systime")), response.getString("upTime"));
+                                        response.getString("port"), LocalDateTime.parse(response.getString("systime")), response.getString("uptime"));
                             }
                         } catch (JSONException e) {
-                            getRestCallbackListener().CallbackPingResponse(requestId, CallbackResult.JSON_EXCEPTION, e.getMessage(), "", "", "", "", null, "");
+                            callbackListener.CallbackPingResponse(requestId, CallbackResult.JSON_EXCEPTION, e.getMessage(), "", "", "", "", null, "");
                         }
                     }
 
                     @Override
                     public void onError(ANError anError) {
-                        getRestCallbackListener().CallbackPingResponse(requestId, CallbackResult.AN_ERROR, anError.getMessage(), "", "", "", "", null, "");
+                        caller.CallbackPingResponse(requestId, CallbackResult.AN_ERROR, anError.getMessage(), "", "", "", "", null, "");
                     }
                 });
         return requestId;
+    }
+
+    private String responseGetStringSafe(JSONObject jsonObject, String fieldName) {
+        try {
+            return jsonObject.getString(fieldName);
+        } catch (JSONException e) {
+            return "";
+        }
     }
 }

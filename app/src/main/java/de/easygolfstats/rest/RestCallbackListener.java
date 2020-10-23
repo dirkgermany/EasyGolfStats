@@ -1,7 +1,7 @@
 package de.easygolfstats.rest;
 
 import org.json.JSONObject;
-import org.threeten.bp.LocalDate;
+import org.threeten.bp.LocalDateTime;
 
 import de.easygolfstats.types.CallbackResult;
 
@@ -42,5 +42,5 @@ public interface RestCallbackListener {
      * @param serverSysDate DateTime (LocalDate) of server
      * @param upTime Serer runtime in millis
      */
-    public void CallbackPingResponse(int requestId, CallbackResult callbackResult, String status, String serviceName, String hostName, String hostAddress, String port, LocalDate serverSysDate, String upTime);
+    public void CallbackPingResponse(int requestId, CallbackResult callbackResult, String status, String serviceName, String hostName, String hostAddress, String port, LocalDateTime serverSysDate, String upTime);
 }

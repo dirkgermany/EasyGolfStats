@@ -1,7 +1,5 @@
 package de.easygolfstats.types;
 
-import de.easygolfstats.types.ClubCategory;
-
 public enum ClubType {
 
     IRON_1 (0, ClubCategory.IRON),

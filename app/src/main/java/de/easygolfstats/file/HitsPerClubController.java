@@ -2,7 +2,8 @@ package de.easygolfstats.file;
 
 import androidx.annotation.WorkerThread;
 
-import org.threeten.bp.LocalDate;
+//import org.threeten.bp.LocalDate;
+import org.threeten.bp.LocalDateTime;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public class HitsPerClubController {
 
     public static String finishStatistic () {
         String activeFileName = HITS_FILENAME_ACTIVE + FILE_SUFFIX;
-        String archiveFileName = HITS_FILENAME_FINISHED + LocalDate.now().toString() + FILE_SUFFIX;
+        String archiveFileName = HITS_FILENAME_FINISHED + LocalDateTime.now().toString() + FILE_SUFFIX;
 
         CsvFile.renameFile(fileDirectory, activeFileName, archiveFileName);
         return archiveFileName;
@@ -239,13 +240,13 @@ public class HitsPerClubController {
     }
 
     public static void deleteHistoryFile(String fileName) {
-        CsvFile.deleteFile(baseDirectory, fileName);
+        CsvFile.deleteFile(fileDirectory, fileName);
     }
     
-    public static LocalDate extractDateFromArchivedFileName(String fileName) {
+    public static LocalDateTime extractDateFromArchivedFileName(String fileName) {
         String dateAsString = fileName.substring(0, fileName.indexOf(FILE_SUFFIX));
-        dateAsString = dateAsString.substring(dateAsString.indexOf(HITS_FILENAME_FINISHED) + HITS_FILENAME_FINISHED.length() +1);
-        LocalDate parsedDate = LocalDate.parse(dateAsString);
+        dateAsString = dateAsString.substring(dateAsString.indexOf(HITS_FILENAME_FINISHED) + HITS_FILENAME_FINISHED.length());
+        LocalDateTime parsedDate = LocalDateTime.parse(dateAsString);
         return parsedDate;
     }
 }

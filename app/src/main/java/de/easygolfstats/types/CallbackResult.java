@@ -9,5 +9,6 @@ public enum CallbackResult {
     JSON_EXCEPTION,
     ERR_UNKNOWN,
     AN_ERROR,
+    MISSING_VALUE,
     ERR;
 }

@@ -1,12 +1,9 @@
 package de.easygolfstats.rest;
 
-import androidx.annotation.WorkerThread;
-
 import java.util.HashMap;
 
 import de.easygolfstats.types.CallbackResult;
 
-@WorkerThread
 public class CallbackSynchronizer {
     private static HashMap<Integer, Semaphore> map = new HashMap<>();
     private static CallbackSynchronizer synchronizer = new CallbackSynchronizer();
