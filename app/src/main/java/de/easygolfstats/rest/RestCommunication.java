@@ -48,8 +48,11 @@ public class RestCommunication {
     private RestCallbackListener getRestCallbackListener () {
         return this.restCallbackListener;
     }
+    
+    public void forceCancelRequests() {
+        AndroidNetworking.forceCancelAll();
+    }
 
-    @WorkerThread
     public int sendPostLogin(String URL, String userName, String password) throws EgsRestException {
         final int requestId = requestIdCounter++;
 
