@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_centerHorizontal="true"
     android:background="#FFFFFF"
-    android:backgroundTint="#ECEFCD"
+    android:backgroundTint="#000000"
     android:orientation="horizontal"
     android:paddingTop="5dp"
     android:paddingBottom="5dp"
@@ -22,6 +22,7 @@
         android:text="Driver"
         android:textAlignment="textStart"
         android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:textColor="#DDD7D7"
         android:textSize="24sp" />
 
     <Button
@@ -30,8 +31,11 @@
         android:layout_width="70dp"
         android:layout_height="60dp"
         android:layout_weight="1"
-        android:backgroundTint="#8BC34A"
-        android:text="+" />
+        android:backgroundTint="#787272"
+        android:text="E"
+        android:textColor="#ecba04"
+        android:textSize="24sp"
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/button_neutral"
@@ -39,8 +43,10 @@
         android:layout_width="70dp"
         android:layout_height="60dp"
         android:layout_weight="1"
-        android:backgroundTint="#EFDADA"
-        android:text="O" />
+        android:backgroundTint="#787272"
+        android:text="o"
+        android:textColor="#ecba04"
+        android:textSize="24sp" />
 
     <Button
         android:id="@+id/button_negative"
@@ -48,8 +54,10 @@
         android:layout_width="70dp"
         android:layout_height="60dp"
         android:layout_weight="1"
-        android:backgroundTint="#FF5722"
-        android:text="-" />
+        android:backgroundTint="#787272"
+        android:text="x"
+        android:textColor="#ecba04"
+        android:textSize="24sp" />
 
     <TextView
         android:id="@+id/itemCountText"
@@ -58,6 +66,7 @@
         android:layout_weight="1"
         android:text="999"
         android:textAlignment="textEnd"
+        android:textColor="#DDD7D7"
         android:textSize="24sp" />
 
 </LinearLayout>

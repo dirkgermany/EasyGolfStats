@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 
         ActionBar actionBar = getSupportActionBar();
         ColorDrawable colorDrawable
-                = new ColorDrawable(Color.parseColor("#FFFFFF"));
+                = new ColorDrawable(Color.parseColor("#000000"));
 
         // Set BackgroundDrawable
         actionBar.setBackgroundDrawable(colorDrawable);

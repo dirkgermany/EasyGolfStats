@@ -5,8 +5,8 @@
     android:id="@+id/coordinatorLayout3"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ECEFCD"
-    android:backgroundTint="#ECEFCD"
+    android:background="#000000"
+    android:backgroundTint="#000000"
     tools:context=".main.MainActivity">
 
 
@@ -30,9 +30,12 @@
         android:layout_height="45dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
+        android:backgroundTint="#787272"
         android:foregroundTint="#673AB7"
         android:onClick="newPeriod"
         android:text="New Stat"
+        android:textColor="#ecba04"
+        android:textStyle="normal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
@@ -50,31 +53,43 @@
 
         <RadioButton
             android:id="@+id/radioButtonRegular"
-            android:layout_width="wrap_content"
+            android:layout_width="96dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:buttonTint="#DDD7D7"
             android:checked="true"
-            android:text="Regular" />
+            android:text="Regular"
+            android:textColor="#ecba04"
+            android:textStyle="bold" />
 
         <RadioButton
             android:id="@+id/radioButtonPitch"
-            android:layout_width="wrap_content"
+            android:layout_width="77dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Pitch" />
+            android:buttonTint="#FFDDD7D7"
+            android:text="Pitch"
+            android:textColor="#ecba04"
+            android:textStyle="bold" />
 
         <RadioButton
             android:id="@+id/radioButtonChip"
-            android:layout_width="wrap_content"
+            android:layout_width="74dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Chip" />
+            android:buttonTint="#FFDDD7D7"
+            android:text="Chip"
+            android:textColor="#ecba04"
+            android:textStyle="bold" />
 
         <RadioButton
             android:id="@+id/radioButtonBunker"
-            android:layout_width="match_parent"
+            android:layout_width="92dp"
             android:layout_height="wrap_content"
-            android:text="Bunker" />
+            android:buttonTint="#FFDDD7D7"
+            android:text="Bunker"
+            android:textColor="#ecba04"
+            android:textStyle="bold" />
 
     </RadioGroup>
 
@@ -84,9 +99,15 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="16dp"
+        android:buttonTint="#DDD7D7"
         android:checked="false"
+        android:drawableTint="#ecba04"
         android:onClick="revert"
+        android:shadowColor="#ecba04"
         android:text="Revert"
+        android:textColor="#ecba04"
+        android:textStyle="bold"
+        android:trackTint="#ecba04"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -96,11 +117,13 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
+        android:backgroundTint="#ecba04"
         android:backgroundTintMode="screen"
-        android:buttonTint="#8BC34A"
+        android:buttonTint="#ecba04"
         android:checked="false"
         android:clickable="false"
         android:focusable="auto"
+        android:foregroundTint="#FFFFFF"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/buttonNew" />
