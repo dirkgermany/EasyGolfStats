@@ -4,6 +4,7 @@ import androidx.annotation.WorkerThread;
 
 //import org.threeten.bp.LocalDate;
 import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.format.DateTimeFormatter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,12 +35,10 @@ public class HitsPerClubController {
     private static String CSV_SEPARATOR = ";";
 
     private static HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap;
-    private static String baseDirectory = "";
     private static String fileDirectory = "";
 
 
     public static void initDataDirectory(String baseDirectory, String dataDirectory) {
-        HitsPerClubController.baseDirectory = baseDirectory;
         HitsPerClubController.fileDirectory = baseDirectory + "/" + dataDirectory;
         CsvFile.createDirectory(baseDirectory, dataDirectory);
     }
@@ -58,12 +57,22 @@ public class HitsPerClubController {
 
     public static String finishStatistic () {
 
-        String activeFileName = HITS_FILENAME_ACTIVE + FILE_SUFFIX;
-        String archiveFileName = HITS_FILENAME_FINISHED + LocalDateTime.now().toString() + FILE_SUFFIX;
+        try {
+            String localDateTimeString = LocalDateTime.now().toString();
+            String localDateTimePrepared = localDateTimeString.replaceAll("\\:", "-");
+            localDateTimePrepared = localDateTimePrepared.replaceAll("\\.", "-");
+            localDateTimePrepared = localDateTimePrepared.replaceAll("\\/", "-");
 
-        CsvFile.renameFile(fileDirectory, activeFileName, archiveFileName);
-        hitMap = null;
-        return archiveFileName;
+            String activeFileName = HITS_FILENAME_ACTIVE + FILE_SUFFIX;
+            String archiveFileName = HITS_FILENAME_FINISHED + localDateTimePrepared + FILE_SUFFIX;
+
+            CsvFile.renameFile(fileDirectory, activeFileName, archiveFileName);
+            hitMap = null;
+            return archiveFileName;
+        }
+        catch (Exception e) {
+            return e.getMessage();
+        }
     }
 
     public static void setHitsPerClubAndCat(HitCategory category, Club club, HitsPerClub hitsPerClub) {
@@ -116,7 +125,6 @@ public class HitsPerClubController {
         HashMap<HitCategory, ArrayList<HitsPerClub>> tempHitMap;
 
         tempHitMap = new HashMap<>();
-
         List<ArrayList<String>> csvLines = CsvFile.readFile(filePath, CSV_SEPARATOR);
         if (null != csvLines) {
             Iterator<ArrayList<String>> it = csvLines.iterator();
@@ -210,7 +218,6 @@ public class HitsPerClubController {
         Iterator<Map.Entry<HitCategory, ArrayList<HitsPerClub>>> itMap = hitMap.entrySet().iterator();
         while (itMap.hasNext()) {
             Map.Entry<HitCategory, ArrayList<HitsPerClub>> pair = itMap.next();
-            //           HitCategory category = pair.getKey();
             Iterator<HitsPerClub> itHits = pair.getValue().iterator();
             while (itHits.hasNext()) {
                 HitsPerClub hitsPerClubAndCat = itHits.next();
@@ -254,7 +261,11 @@ public class HitsPerClubController {
     public static LocalDateTime extractDateFromArchivedFileName(String fileName) {
         String dateAsString = fileName.substring(0, fileName.indexOf(FILE_SUFFIX));
         dateAsString = dateAsString.substring(dateAsString.indexOf(HITS_FILENAME_FINISHED) + HITS_FILENAME_FINISHED.length());
-        LocalDateTime parsedDate = LocalDateTime.parse(dateAsString);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss-n");
+
+        LocalDateTime parsedDate = LocalDateTime.from(formatter.parse(dateAsString));
+
         return parsedDate;
     }
 }

@@ -1,5 +1,6 @@
 package de.easygolfstats.file;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -12,7 +13,7 @@ public class Settings {
     private Properties properties;
     private String filePath;
 
-    public Settings (String filePath) {
+    public Settings(String filePath) {
         this.filePath = filePath;
         readProperties();
     }
@@ -35,14 +36,32 @@ public class Settings {
     public void writeProperties() {
         try {
             OutputStream stream = new FileOutputStream(filePath);
-            properties.store(stream, "write");
+            properties.store(stream, "Last Update");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    private void initPropertyFile() {
+
+        properties.setProperty("protocol", "http");
+        properties.setProperty("address", "84.44.128.8");
+        properties.setProperty("port", "9090");
+        properties.setProperty("path", "easy_golf_stats");
+        properties.setProperty("password", "your_password");
+        properties.setProperty("userName", "your_name");
+
+        writeProperties();
+    }
+
     private void readProperties() {
         properties = new Properties();
+
+        File propertyFile = new File(filePath);
+        if (!propertyFile.exists()) {
+            initPropertyFile();
+            return;
+        }
 
         try {
             InputStream stream = new FileInputStream(filePath);
