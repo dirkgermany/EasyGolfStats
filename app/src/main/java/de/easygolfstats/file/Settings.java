@@ -1,15 +1,20 @@
 package de.easygolfstats.file;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Properties;
 
 public class Settings {
     private Properties properties;
+    private String filePath;
 
     public Settings (String filePath) {
-        initProperties(filePath);
+        this.filePath = filePath;
+        readProperties();
     }
 
     public String getValue(String key, String defaultValue) {
@@ -22,7 +27,21 @@ public class Settings {
         return Boolean.parseBoolean(booleanString);
     }
 
-    private void initProperties(String filePath) {
+    public void setValue(String key, String value) {
+        properties.setProperty(key, value);
+        writeProperties();
+    }
+
+    public void writeProperties() {
+        try {
+            OutputStream stream = new FileOutputStream(filePath);
+            properties.store(stream, "write");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readProperties() {
         properties = new Properties();
 
         try {
@@ -32,4 +51,5 @@ public class Settings {
             e.printStackTrace();
         }
     }
+
 }

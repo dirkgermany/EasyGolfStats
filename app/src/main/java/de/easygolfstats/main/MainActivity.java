@@ -2,15 +2,18 @@ package de.easygolfstats.main;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.RadioGroup;
 import android.widget.Switch;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -49,15 +52,51 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     public void newPeriod(View view) {
         logger.finest("newPeriod", "NEW Button was clicked");
 
-        HitsPerClubController.finishStatistic();
-        synchronizer.updateAtServer();
+        final CheckBox hitsSynchronized = (CheckBox) findViewById(R.id.checkBoxHitsSynchron);
+        hitsSynchronized.setChecked(false);
 
         hitsPerClubList.clear();
+
+        rvHitsPerClub.getAdapter().notifyItemRangeRemoved(0,999);
         rvHitsPerClub.getAdapter().notifyDataSetChanged();
+
+        HitsPerClubController.finishStatistic();
 
         HitsPerClubController.initializeFiles();
         hitsPerClubList = HitsPerClubController.copyHitsPerClubFromFile(hitsPerClubList);
-        rvHitsPerClub.getAdapter().notifyDataSetChanged();
+//        hitsPerClubList = HitsPerClubController.getHitsPerClubFromFile();
+//        rvHitsPerClub.getAdapter().notifyDataSetChanged();
+
+
+
+//        final HitsPerClubAdapter adapter = new HitsPerClubAdapter(hitsPerClubList, this);
+
+        // Attach the adapter to the recyclerview to populate items
+//        rvHitsPerClub.setAdapter(adapter);
+
+
+        final MainActivity activity = this;
+        Thread newThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("syncHitsThread");
+                final boolean updateSuccess = synchronizer.updateAtServer();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        activity.updateCheck(updateSuccess);
+                    }
+                });
+            }
+        });
+        newThread.start();
+
+    }
+
+    private void updateCheck(boolean success) {
+        final CheckBox hitsSynchronized = (CheckBox) findViewById(R.id.checkBoxHitsSynchron);
+        hitsSynchronized.setChecked(success);
     }
 
     public void revert(View view) {
@@ -70,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     }
 
     /**
-     *
      * @param view
      * @param listIndex
      */
@@ -202,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 
         HitsPerClubController.initDataDirectory(basePath, "data");
         HitsPerClubController.initializeFiles();
-        BagController.initClubList(fileDirectory);
+ //       BagController.initClubList(fileDirectory);
 
         hitsPerClubList = HitsPerClubController.getHitsPerClubFromFile();
         final HitsPerClubAdapter adapter = new HitsPerClubAdapter(hitsPerClubList, this);

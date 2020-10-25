@@ -40,6 +40,10 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
         itemClickListenerVar = itemClickListener;
     }
 
+    public void clearHitsPerClubs() {
+        this.hitsPerClubs.clear();
+    }
+
     @Override
     public HitsPerClubAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         Context context = parent.getContext();

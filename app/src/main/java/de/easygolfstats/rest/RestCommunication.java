@@ -5,7 +5,6 @@ import android.content.Context;
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.common.Priority;
 import com.androidnetworking.error.ANError;
-import com.androidnetworking.interfaces.JSONArrayRequestListener;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.jacksonandroidnetworking.JacksonParserFactory;
 
@@ -46,7 +45,7 @@ public class RestCommunication {
         final RestCallbackListener caller = callbackListener;
 
         if (null == userName || userName.isEmpty() || null == password || password.isEmpty()) {
-            callbackListener.CallbackLoginResponse(requestId, CallbackResult.MISSING_VALUE, "ERR", null, null, null);
+            callbackListener.CallbackLoginResponse(requestId, CallbackResult.MISSED_VALUE, "ERR", null, null, null);
             return requestId;
         }
 
@@ -108,7 +107,12 @@ public class RestCommunication {
                 .getAsJSONObject(new JSONObjectRequestListener() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        caller.CallbackPostHitsResponse(requestId, CallbackResult.OK, "OK", fileName);
+                        try {
+                            String result = (String) response.get("result");
+                            caller.CallbackPostHitsResponse(requestId, CallbackResult.valueOf(result), result, fileName);
+                        } catch (JSONException e) {
+                            caller.CallbackPostHitsResponse(requestId, CallbackResult.JSON_EXCEPTION, "ERR", fileName);
+                        }
                     }
 
                     @Override
@@ -150,7 +154,7 @@ public class RestCommunication {
         final RestCallbackListener caller = callbackListener;
 
         if (null == tokenId || tokenId.isEmpty()) {
-            callbackListener.CallbackPingResponse(requestId, CallbackResult.MISSING_VALUE, "ERR", null, null, null, null, null, null);
+            callbackListener.CallbackPingResponse(requestId, CallbackResult.MISSED_VALUE, "ERR", null, null, null, null, null, null);
             return requestId;
         }
 

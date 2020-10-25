@@ -1,17 +1,12 @@
 package de.easygolfstats.rest;
 
-import android.accounts.NetworkErrorException;
 import android.content.Context;
-
-import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.threeten.bp.LocalDate;
 import org.threeten.bp.LocalDateTime;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,6 +52,40 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
     }
 
+    private String getTokenId() {
+        if (null == this.tokenId || this.tokenId.isEmpty()) {
+            this.tokenId = settings.getValue("tokenId", "");
+        }
+        return this.tokenId;
+    }
+
+    private void setTokenId(String tokenId) {
+        settings.setValue("tokenId", tokenId);
+        this.tokenId = tokenId;
+    }
+
+    private Long getUserId() {
+        if (null == this.userId) {
+            String userId = settings.getValue("userId", "");
+            if (null != userId && !userId.isEmpty()) {
+                this.userId = Long.parseLong(userId);
+                return this.userId;
+            }
+        }
+        return null;
+    }
+
+    private void setUserId(Long userId) {
+        settings.setValue("userId", String.valueOf(userId));
+    }
+
+    private CallbackResult establishConnection() {
+        if (!ping().equals(CallbackResult.OK)) {
+            return login();
+        }
+        return CallbackResult.OK;
+    }
+
     private CallbackResult login() {
         final String userName = settings.getValue("userName", "dirk");
         final String password = settings.getValue("password", "");
@@ -73,7 +102,7 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
     private CallbackResult ping() {
         try {
-            int requestId = RestCommunication.getInstance().sendPingRequest(this, this.URL, this.path, this.tokenId);
+            int requestId = RestCommunication.getInstance().sendPingRequest(this, this.URL, this.path, getTokenId());
             return CallbackSynchronizer.wait(requestId, "PING", 5000L);
         } catch (EgsRestException e) {
             e.printStackTrace();
@@ -82,11 +111,9 @@ public class SynchronizeClientServerData implements RestCallbackListener {
     }
 
     public CallbackResult writeHitsList(LocalDateTime sessionDate, List<Hits> hits, String fileName) {
-        if (!ping().equals(CallbackResult.OK)) {
-            CallbackResult loginResult = login();
-            if (!loginResult.equals(CallbackResult.OK)) {
-                return loginResult;
-            }
+        CallbackResult connectionEstablished = establishConnection();
+        if (!CallbackResult.OK.equals(connectionEstablished)) {
+            return connectionEstablished;
         }
 
         JSONArray jsonArray = new JSONArray();
@@ -101,13 +128,19 @@ public class SynchronizeClientServerData implements RestCallbackListener {
         if (jsonArray.length() != 0) {
             // hits in file, some values <> 0
             try {
-                int requestId = RestCommunication.getInstance().sendPostHitsRequest(this, this.URL, this.path, this.tokenId, jsonArray, fileName);
-                CallbackResult waitResult = CallbackSynchronizer.wait(requestId, "WRITE_HITS_LIST", 5000L);
-                if (!CallbackResult.OK.equals(waitResult)) {
-                    return waitResult;
+                int requestId = RestCommunication.getInstance().sendPostHitsRequest(this, this.URL, this.path, getTokenId(), jsonArray, fileName);
+                CallbackResult waitResult = CallbackSynchronizer.wait(requestId, "WRITE_HITS_LIST", 10000L);
+                switch (waitResult) {
+                    case OK:
+                    case CREATE_DUPLICATE_KEY:
+                        break;
+
+                    default:
+                        return waitResult;
                 }
+
             } catch (EgsRestException e) {
-                e.printStackTrace();
+                return CallbackResult.REST_EXCEPTION;
             }
         }
 
@@ -116,28 +149,26 @@ public class SynchronizeClientServerData implements RestCallbackListener {
     }
 
     public ArrayList<Club> getClubs() {
-        if (!ping().equals(CallbackResult.OK)) {
-            CallbackResult loginResult = login();
-            if (!loginResult.equals(CallbackResult.OK)) {
+        CallbackResult connectionEstablished = establishConnection();
+        if (!CallbackResult.OK.equals(connectionEstablished)) {
+            return null;
+        }
+
+        this.clubs = new ArrayList<>();
+        try {
+            int requestId = RestCommunication.getInstance().sendGetClubRequest(this, this.URL, this.path, getTokenId(), getUserId());
+            CallbackResult waitResult = CallbackSynchronizer.wait(requestId, "GET_CLUBS", 10000L);
+            if (!CallbackResult.OK.equals(waitResult)) {
                 return null;
             }
-
-            this.clubs = new ArrayList<>();
-            try {
-                int requestId = RestCommunication.getInstance().sendGetClubRequest(this, this.URL, this.path, this.tokenId, this.userId);
-                CallbackResult waitResult = CallbackSynchronizer.wait(requestId, "GET_CLUBS", 5000L);
-                if (!CallbackResult.OK.equals(waitResult)) {
-                    return null;
-                }
-            } catch (EgsRestException e) {
-                e.printStackTrace();
-            }
+        } catch (EgsRestException e) {
+            e.printStackTrace();
         }
 
         return this.clubs;
     }
 
-    public void updateAtServer() {
+    public boolean updateAtServer() {
         List<String> historyFileList = HitsPerClubController.getHistoryFileNames();
 
         Iterator<String> it = historyFileList.iterator();
@@ -147,12 +178,16 @@ public class SynchronizeClientServerData implements RestCallbackListener {
             HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap = HitsPerClubController.readHitsFromHistoryFile(fileName);
             if (null != hitMap && !hitMap.isEmpty()) {
                 LocalDateTime sessionDate = HitsPerClubController.extractDateFromArchivedFileName(fileName);
-                processMap(sessionDate, hitMap, fileName);
+                if (!processMap(sessionDate, hitMap, fileName)) {
+                    return false;
+                }
             }
         }
+
+        return true;
     }
 
-    private void processMap(LocalDateTime sessionDate, HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap, String fileName) {
+    private boolean processMap(LocalDateTime sessionDate, HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap, String fileName) {
         Iterator<Map.Entry<HitCategory, ArrayList<HitsPerClub>>> itMap = hitMap.entrySet().iterator();
         ArrayList<Hits> hitsList = new ArrayList<>();
 
@@ -177,8 +212,12 @@ public class SynchronizeClientServerData implements RestCallbackListener {
         }
 
         if (null != hitsList && !hitsList.isEmpty()) {
-            writeHitsList(sessionDate, hitsList, fileName);
+            if (CallbackResult.OK.equals(writeHitsList(sessionDate, hitsList, fileName))) {
+                return true;
+            }
+            return false;
         }
+        return true;
     }
 
 
@@ -208,8 +247,8 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
     @Override
     public void CallbackLoginResponse(int requestId, CallbackResult callbackResult, String result, String tokenId, Long userId, String serviceName) {
-        this.tokenId = tokenId;
-        this.userId = userId;
+        setTokenId(tokenId);
+        setUserId(userId);
         CallbackSynchronizer.callBackCalled(requestId, callbackResult, "LoginResponse");
     }
 

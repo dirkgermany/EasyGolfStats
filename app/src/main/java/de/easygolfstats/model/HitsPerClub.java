@@ -35,7 +35,6 @@ public class HitsPerClub implements Comparable{
 
     public void incrementHitsBad (int incrementVal) {
         this.hitsBad+=incrementVal;
-        int bla = hitsBad;
     }
 
     public Club getClub() {

@@ -30,7 +30,6 @@
         android:layout_height="45dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
-        android:backgroundTint="#F69B9B"
         android:foregroundTint="#673AB7"
         android:onClick="newPeriod"
         android:text="New Stat"
@@ -90,5 +89,20 @@
         android:text="Revert"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <CheckBox
+        android:id="@+id/checkBoxHitsSynchron"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:backgroundTintMode="screen"
+        android:buttonTint="#8BC34A"
+        android:checked="false"
+        android:clickable="false"
+        android:focusable="auto"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/buttonNew" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

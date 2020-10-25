@@ -57,10 +57,12 @@ public class HitsPerClubController {
     }
 
     public static String finishStatistic () {
+
         String activeFileName = HITS_FILENAME_ACTIVE + FILE_SUFFIX;
         String archiveFileName = HITS_FILENAME_FINISHED + LocalDateTime.now().toString() + FILE_SUFFIX;
 
         CsvFile.renameFile(fileDirectory, activeFileName, archiveFileName);
+        hitMap = null;
         return archiveFileName;
     }
 
@@ -101,17 +103,19 @@ public class HitsPerClubController {
     }
     
     public static Map<HitCategory, ArrayList<HitsPerClub>> readHitsFromActiveFile() {
-        return readHitsFromFile(HITS_FILENAME_ACTIVE + FILE_SUFFIX);
+        return readHitsFromFile(HITS_FILENAME_ACTIVE + FILE_SUFFIX, true);
     }
     
     public static HashMap<HitCategory, ArrayList<HitsPerClub>> readHitsFromHistoryFile(String fileName) {
-        return readHitsFromFile(fileName);
+        return readHitsFromFile(fileName, false);
     }
 
-    private static HashMap<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileName) {
+    private static HashMap<HitCategory, ArrayList<HitsPerClub>> readHitsFromFile(String fileName, boolean fillActiveHitMap) {
         // Get items from file
         String filePath = fileDirectory + "/" + fileName ;
-        hitMap = new HashMap<>();
+        HashMap<HitCategory, ArrayList<HitsPerClub>> tempHitMap;
+
+        tempHitMap = new HashMap<>();
 
         List<ArrayList<String>> csvLines = CsvFile.readFile(filePath, CSV_SEPARATOR);
         if (null != csvLines) {
@@ -124,16 +128,20 @@ public class HitsPerClubController {
                 Integer qualityNeutral = Integer.valueOf(nextItem.get(QUALITY_NEUTRAL_COUNTER_POS));
                 Integer qualityBad = Integer.valueOf(nextItem.get(QUALITY_BAD_COUNTER_POS));
 
-                ArrayList<HitsPerClub> hits = hitMap.get(category);
+                ArrayList<HitsPerClub> hits = tempHitMap.get(category);
                 if (null == hits) {
                     hits = new ArrayList<>();
                 }
                 Club club = BagController.getClubByName(clubName);
                 hits.add(new HitsPerClub(club, qualityGood, qualityNeutral, qualityBad));
-                hitMap.put(category, hits);
+                tempHitMap.put(category, hits);
             }
         }
-        return hitMap;
+
+        if (fillActiveHitMap) {
+            hitMap = tempHitMap;
+        }
+        return tempHitMap;
     }
 
     public static void writeHitsToFile(HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap) {
