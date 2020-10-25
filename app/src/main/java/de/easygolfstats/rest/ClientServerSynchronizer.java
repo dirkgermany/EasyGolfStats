@@ -23,7 +23,7 @@ import de.easygolfstats.types.CallbackResult;
 import de.easygolfstats.types.ClubType;
 import de.easygolfstats.types.HitCategory;
 
-public class SynchronizeClientServerData implements RestCallbackListener {
+public class ClientServerSynchronizer implements RestCallbackListener {
     private String URL;
     private String path;
     private boolean pingSuccess = true;
@@ -35,7 +35,7 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
     // TODO: 20.10.20    Diese Klasse mit Timer versehen, der den Datenabgleich regelmäßig anstößt
 
-    public SynchronizeClientServerData(Context context, String basePath) {
+    public ClientServerSynchronizer(Context context, String basePath) {
         init(context, basePath);
     }
 
@@ -52,62 +52,8 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
     }
 
-    private String getTokenId() {
-        if (null == this.tokenId || this.tokenId.isEmpty()) {
-            this.tokenId = settings.getValue("tokenId", "");
-        }
-        return this.tokenId;
-    }
-
-    private void setTokenId(String tokenId) {
-        settings.setValue("tokenId", tokenId);
-        this.tokenId = tokenId;
-    }
-
-    private Long getUserId() {
-        if (null == this.userId) {
-            String userId = settings.getValue("userId", "");
-            if (null != userId && !userId.isEmpty()) {
-                this.userId = Long.parseLong(userId);
-                return this.userId;
-            }
-        }
-        return null;
-    }
-
-    private void setUserId(Long userId) {
-        settings.setValue("userId", String.valueOf(userId));
-    }
-
-    private CallbackResult establishConnection() {
-        if (!ping().equals(CallbackResult.OK)) {
-            return login();
-        }
-        return CallbackResult.OK;
-    }
-
-    private CallbackResult login() {
-        final String userName = settings.getValue("userName", "dirk");
-        final String password = settings.getValue("password", "");
-
-        try {
-            int requestId = RestCommunication.getInstance().sendPostLogin(this, this.URL, userName, password);
-            return CallbackSynchronizer.wait(requestId, "LOGIN", 5000L);
-        } catch (EgsRestException e) {
-            e.printStackTrace();
-        }
-
-        return CallbackResult.ERR_UNKNOWN;
-    }
-
-    private CallbackResult ping() {
-        try {
-            int requestId = RestCommunication.getInstance().sendPingRequest(this, this.URL, this.path, getTokenId());
-            return CallbackSynchronizer.wait(requestId, "PING", 5000L);
-        } catch (EgsRestException e) {
-            e.printStackTrace();
-        }
-        return CallbackResult.ERR_UNKNOWN;
+    public boolean isHitListSynchronized() {
+        return (0 == HitsPerClubController.getHistoryFileNames().size());
     }
 
     public CallbackResult writeHitsList(LocalDateTime sessionDate, List<Hits> hits, String fileName) {
@@ -186,6 +132,65 @@ public class SynchronizeClientServerData implements RestCallbackListener {
 
         return true;
     }
+
+    private String getTokenId() {
+        if (null == this.tokenId || this.tokenId.isEmpty()) {
+            this.tokenId = settings.getValue("tokenId", "");
+        }
+        return this.tokenId;
+    }
+
+    private void setTokenId(String tokenId) {
+        settings.setValue("tokenId", tokenId);
+        this.tokenId = tokenId;
+    }
+
+    private Long getUserId() {
+        if (null == this.userId) {
+            String userId = settings.getValue("userId", "");
+            if (null != userId && !userId.isEmpty()) {
+                this.userId = Long.parseLong(userId);
+                return this.userId;
+            }
+        }
+        return null;
+    }
+
+    private void setUserId(Long userId) {
+        settings.setValue("userId", String.valueOf(userId));
+    }
+
+    private CallbackResult establishConnection() {
+        if (!ping().equals(CallbackResult.OK)) {
+            return login();
+        }
+        return CallbackResult.OK;
+    }
+
+    private CallbackResult login() {
+        final String userName = settings.getValue("userName", "dirk");
+        final String password = settings.getValue("password", "");
+
+        try {
+            int requestId = RestCommunication.getInstance().sendPostLogin(this, this.URL, userName, password);
+            return CallbackSynchronizer.wait(requestId, "LOGIN", 5000L);
+        } catch (EgsRestException e) {
+            e.printStackTrace();
+        }
+
+        return CallbackResult.ERR_UNKNOWN;
+    }
+
+    private CallbackResult ping() {
+        try {
+            int requestId = RestCommunication.getInstance().sendPingRequest(this, this.URL, this.path, getTokenId());
+            return CallbackSynchronizer.wait(requestId, "PING", 5000L);
+        } catch (EgsRestException e) {
+            e.printStackTrace();
+        }
+        return CallbackResult.ERR_UNKNOWN;
+    }
+
 
     private boolean processMap(LocalDateTime sessionDate, HashMap<HitCategory, ArrayList<HitsPerClub>> hitMap, String fileName) {
         Iterator<Map.Entry<HitCategory, ArrayList<HitsPerClub>>> itMap = hitMap.entrySet().iterator();

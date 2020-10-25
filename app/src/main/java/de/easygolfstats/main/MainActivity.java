@@ -2,7 +2,6 @@ package de.easygolfstats.main;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -13,7 +12,6 @@ import android.widget.Switch;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -28,7 +26,7 @@ import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
 import de.easygolfstats.model.HitsPerClub;
 import de.easygolfstats.rest.RestCommunication;
-import de.easygolfstats.rest.SynchronizeClientServerData;
+import de.easygolfstats.rest.ClientServerSynchronizer;
 import de.easygolfstats.types.HitCategory;
 
 public class MainActivity extends AppCompatActivity implements HitsPerClubAdapter.ItemClickListener {
@@ -43,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 
     private ArrayList<HitsPerClub> hitsPerClubList;
     private RecyclerView rvHitsPerClub;
-    SynchronizeClientServerData synchronizer;
+    ClientServerSynchronizer synchronizer;
 
     private String fileDirectory;
     private Logger logger;
@@ -64,16 +62,6 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 
         HitsPerClubController.initializeFiles();
         hitsPerClubList = HitsPerClubController.copyHitsPerClubFromFile(hitsPerClubList);
-//        hitsPerClubList = HitsPerClubController.getHitsPerClubFromFile();
-//        rvHitsPerClub.getAdapter().notifyDataSetChanged();
-
-
-
-//        final HitsPerClubAdapter adapter = new HitsPerClubAdapter(hitsPerClubList, this);
-
-        // Attach the adapter to the recyclerview to populate items
-//        rvHitsPerClub.setAdapter(adapter);
-
 
         final MainActivity activity = this;
         Thread newThread = new Thread(new Runnable() {
@@ -258,8 +246,10 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
                 layoutManager.getOrientation());
         rvHitsPerClub.addItemDecoration(dividerItemDecoration);
 
-        synchronizer = new SynchronizeClientServerData(getApplicationContext(), basePath);
+        synchronizer = new ClientServerSynchronizer(getApplicationContext(), basePath);
         synchronizer.getClubs();
+        CheckBox hitsSynchronized = (CheckBox) findViewById(R.id.checkBoxHitsSynchron);
+        hitsSynchronized.setChecked(synchronizer.isHitListSynchronized());
 
     }
 }
