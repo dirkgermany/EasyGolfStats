@@ -9,12 +9,15 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.RadioGroup;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.jakewharton.threetenabp.AndroidThreeTen;
 
 import java.util.ArrayList;
 
@@ -25,11 +28,12 @@ import de.easygolfstats.itemList.HitsPerClubAdapter;
 import de.easygolfstats.log.Logger;
 import de.easygolfstats.model.Club;
 import de.easygolfstats.model.HitsPerClub;
+import de.easygolfstats.rest.GuiListener;
 import de.easygolfstats.rest.RestCommunication;
 import de.easygolfstats.rest.ClientServerSynchronizer;
 import de.easygolfstats.types.HitCategory;
 
-public class MainActivity extends AppCompatActivity implements HitsPerClubAdapter.ItemClickListener {
+public class MainActivity extends AppCompatActivity implements HitsPerClubAdapter.ItemClickListener, GuiListener {
 
     private static final String MARK_COLOR_ROUTE_DONE = "#9CB548";
     private static final String MARK_COLOR_NOT_ACTIVE = "#E6EAED";
@@ -50,20 +54,15 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     public void newPeriod(View view) {
         logger.finest("newPeriod", "NEW Button was clicked");
 
-        final CheckBox hitsSynchronized = (CheckBox) findViewById(R.id.checkBoxHitsSynchron);
-        hitsSynchronized.setChecked(false);
-
         hitsPerClubList.clear();
-
-        rvHitsPerClub.getAdapter().notifyItemRangeRemoved(0,999);
         rvHitsPerClub.getAdapter().notifyDataSetChanged();
 
         HitsPerClubController.finishStatistic();
-
         HitsPerClubController.initializeFiles();
         hitsPerClubList = HitsPerClubController.copyHitsPerClubFromFile(hitsPerClubList);
 
-        final MainActivity activity = this;
+
+        /*       final MainActivity activity = this;
         Thread newThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -73,18 +72,30 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        activity.updateCheck(updateSuccess);
+                        activity.switchSyncCheckBox(updateSuccess);
                     }
                 });
             }
         });
-        newThread.start();
 
+        newThread.start();
+*/
     }
 
-    private void updateCheck(boolean success) {
-        final CheckBox hitsSynchronized = (CheckBox) findViewById(R.id.checkBoxHitsSynchron);
-        hitsSynchronized.setChecked(success);
+    @Override
+    public void updateSyncStatus(final boolean isSynchronized) {
+        final MainActivity activity = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                activity.switchSyncCheckBox(isSynchronized);
+            }
+        });
+    }
+
+    private void switchSyncCheckBox(boolean isSynchronized) {
+        final CheckBox hitsSynchronized = findViewById(R.id.checkBoxHitsSynchron);
+        hitsSynchronized.setChecked(isSynchronized);
     }
 
     public void revert(View view) {
@@ -218,6 +229,8 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
         // Initialize reference routes list
         fileDirectory = basePath + "/data";
 
+        AndroidThreeTen.init(this);
+
         Logger.setBasePath(basePath);
         logger = Logger.createLogger("MainActivity");
 
@@ -228,7 +241,6 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 
         HitsPerClubController.initDataDirectory(basePath, "data");
         HitsPerClubController.initializeFiles();
- //       BagController.initClubList(fileDirectory);
 
         hitsPerClubList = HitsPerClubController.getHitsPerClubFromFile();
         final HitsPerClubAdapter adapter = new HitsPerClubAdapter(hitsPerClubList, this);
@@ -248,8 +260,10 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
 
         synchronizer = new ClientServerSynchronizer(getApplicationContext(), basePath);
         synchronizer.getClubs();
-        CheckBox hitsSynchronized = (CheckBox) findViewById(R.id.checkBoxHitsSynchron);
-        hitsSynchronized.setChecked(synchronizer.isHitListSynchronized());
+
+        synchronizer.cyclicSynchronize(this);
+//        CheckBox hitsSynchronized = (CheckBox) findViewById(R.id.checkBoxHitsSynchron);
+//        hitsSynchronized.setChecked(synchronizer.isHitListSynchronized());
 
     }
 }

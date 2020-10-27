@@ -49,7 +49,7 @@ public class Settings {
         properties.setProperty("port", "9090");
         properties.setProperty("path", "easy_golf_stats");
         properties.setProperty("password", "your_password");
-        properties.setProperty("userName", "your_name");
+        properties.setProperty("userName", "your_user_name");
 
         writeProperties();
     }

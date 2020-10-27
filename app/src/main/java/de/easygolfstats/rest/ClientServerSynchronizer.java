@@ -16,6 +16,7 @@ import java.util.Map;
 import de.easygolfstats.Exception.EgsRestException;
 import de.easygolfstats.file.HitsPerClubController;
 import de.easygolfstats.file.Settings;
+import de.easygolfstats.main.MainActivity;
 import de.easygolfstats.model.Club;
 import de.easygolfstats.model.Hits;
 import de.easygolfstats.model.HitsPerClub;
@@ -50,6 +51,26 @@ public class ClientServerSynchronizer implements RestCallbackListener {
         this.path = settings.getValue("path", "easy_golf_stats");
         this.URL = protocol + "://" + address + ":" + port;
 
+    }
+
+    public void cyclicSynchronize(final MainActivity activity) {
+        Thread cycle = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Thread.currentThread().setName("syncHitsThread");
+                while (true) {
+                    final boolean updateSuccess = updateAtServer();
+                    activity.updateSyncStatus(updateSuccess);
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        System.out.println("");
+                        break;
+                    }
+                }
+            }
+        });
+        cycle.start();
     }
 
     public boolean isHitListSynchronized() {
