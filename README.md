@@ -1,5 +1,5 @@
 # EasyGolfStats
-Simple App which stores golf shots and their quality to create statistics.
+Get statistics about the improvement of your golf training by a simple Android app.
 
 ## About
 As a part of an analytic system (see below) EasyGolfStats is an Android based app that helps you controlling the progress of your golf game.
