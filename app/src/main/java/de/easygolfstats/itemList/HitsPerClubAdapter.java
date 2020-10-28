@@ -20,7 +20,7 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public TextView clubNameTextView;
-        public TextView positiveCounter;
+//        public TextView positiveCounter;
         public Button buttonPositive;
         public Button buttonNeutral;
         public Button buttonNegative;
@@ -28,7 +28,7 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
         public ViewHolder (View itemView) {
             super (itemView);
             clubNameTextView = (TextView) itemView.findViewById(R.id.itemClubName);
-            positiveCounter = (TextView) itemView.findViewById(R.id.itemCountText);
+//            positiveCounter = (TextView) itemView.findViewById(R.id.itemCountText);
             buttonNegative = (Button) itemView.findViewById(R.id.button_negative);
             buttonNeutral = (Button) itemView.findViewById(R.id.button_neutral);
             buttonPositive = (Button) itemView.findViewById(R.id.button_positive);
@@ -65,12 +65,16 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
 
         // Set item views based on your views and data model
         TextView clubNameTextView = viewHolder.clubNameTextView;
-        TextView positiveCounter = viewHolder.positiveCounter;
+ //       TextView positiveCounter = viewHolder.positiveCounter;
         clubNameTextView.setText(hitsPerClub.getClubName());
-        positiveCounter.setText(String.valueOf(hitsPerClub.getHitsOverAll()));
+//        positiveCounter.setText(String.valueOf(hitsPerClub.getHitsOverAll()));
         Button buttonNeutral = viewHolder.buttonNeutral;
         Button buttonPositive = viewHolder.buttonPositive;
         Button buttonNegative = viewHolder.buttonNegative;
+
+        buttonPositive.setText(String.valueOf(hitsPerClub.getHitsGood()));
+        buttonNeutral.setText(String.valueOf(hitsPerClub.getHitsNeutral()));
+        buttonNegative.setText(String.valueOf(hitsPerClub.getHitsBad()));
 
         View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
@@ -79,7 +83,7 @@ public class HitsPerClubAdapter extends RecyclerView.Adapter<HitsPerClubAdapter.
             }
         };
         clubNameTextView.setOnClickListener(onClickListener);
-        positiveCounter.setOnClickListener(onClickListener);
+//        positiveCounter.setOnClickListener(onClickListener);
         buttonNegative.setOnClickListener(onClickListener);
         buttonNeutral.setOnClickListener(onClickListener);
         buttonPositive.setOnClickListener(onClickListener);

@@ -2,9 +2,9 @@ package de.easygolfstats.model;
 
 public class HitsPerClub implements Comparable{
     private Club club;
-    private int hitsGood;
-    private int hitsNeutral;
-    private int hitsBad;
+    private int hitsGood = 0;
+    private int hitsNeutral = 0;
+    private int hitsBad = 0;
 
     public HitsPerClub(Club club, int hitsGood, int hitsNeutral, int hitsBad) {
         this.club = club;

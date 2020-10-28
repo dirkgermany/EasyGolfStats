@@ -28,45 +28,34 @@
     <Button
         android:id="@+id/button_positive"
         style="@style/Widget.AppCompat.Button.Small"
-        android:layout_width="70dp"
+        android:layout_width="105dp"
         android:layout_height="60dp"
         android:layout_weight="1"
         android:backgroundTint="#787272"
         android:text="E"
         android:textColor="#ecba04"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textSize="18sp" />
 
     <Button
         android:id="@+id/button_neutral"
         style="@style/Widget.AppCompat.Button.Small"
-        android:layout_width="70dp"
+        android:layout_width="105dp"
         android:layout_height="60dp"
         android:layout_weight="1"
         android:backgroundTint="#787272"
         android:text="o"
         android:textColor="#ecba04"
-        android:textSize="24sp" />
+        android:textSize="18sp" />
 
     <Button
         android:id="@+id/button_negative"
         style="@style/Widget.AppCompat.Button.Small"
-        android:layout_width="70dp"
+        android:layout_width="105dp"
         android:layout_height="60dp"
         android:layout_weight="1"
         android:backgroundTint="#787272"
         android:text="x"
         android:textColor="#ecba04"
-        android:textSize="24sp" />
-
-    <TextView
-        android:id="@+id/itemCountText"
-        android:layout_width="63dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="999"
-        android:textAlignment="textEnd"
-        android:textColor="#DDD7D7"
-        android:textSize="24sp" />
+        android:textSize="18sp" />
 
 </LinearLayout>

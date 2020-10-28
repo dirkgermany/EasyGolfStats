@@ -183,7 +183,6 @@ public class RestCommunication {
                         try {
                             String status = response.getString("status");
                             if (status.equalsIgnoreCase("OK")) {
-
                                 caller.CallbackPingResponse(requestId, CallbackResult.OK, status, responseGetStringSafe(response, "serviceName"),
                                         response.getString("hostName"), response.getString("hostAddress"),
                                         response.getString("port"), LocalDateTime.parse(response.getString("systime")), response.getString("uptime"));

@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     @Override
     public void itemClicked(View view, int listIndex) {
         int viewId = view.getId();
-        if (viewId == R.id.itemClubName || viewId == R.id.itemCountText) {
+        if (viewId == R.id.itemClubName) {//|| viewId == R.id.itemCountText) {
             return;
         }
 

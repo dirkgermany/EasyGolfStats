@@ -168,11 +168,11 @@ public class HitsPerClubController {
                         .append(CSV_SEPARATOR)
                         .append(hitsPerClub.getClubName())
                         .append(CSV_SEPARATOR)
-                        .append(hitsPerClub.getHitsGood())
+                        .append(String.valueOf(hitsPerClub.getHitsGood()))
                         .append(CSV_SEPARATOR)
-                        .append(hitsPerClub.getHitsNeutral())
+                        .append(String.valueOf(hitsPerClub.getHitsNeutral()))
                         .append(CSV_SEPARATOR)
-                        .append(hitsPerClub.getHitsBad()).toString();
+                        .append(String.valueOf(hitsPerClub.getHitsBad())).toString();
                 csvLines.add(csvLine);
             }
         }
