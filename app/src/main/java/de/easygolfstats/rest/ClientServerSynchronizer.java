@@ -33,9 +33,6 @@ public class ClientServerSynchronizer implements RestCallbackListener {
     private Settings settings;
     ArrayList<Club> clubs = null;
 
-
-    // TODO: 20.10.20    Diese Klasse mit Timer versehen, der den Datenabgleich regelmäßig anstößt
-
     public ClientServerSynchronizer(Context context, String basePath) {
         init(context, basePath);
     }
@@ -60,7 +57,7 @@ public class ClientServerSynchronizer implements RestCallbackListener {
                 Thread.currentThread().setName("syncHitsThread");
                 while (true) {
                     final boolean updateSuccess = updateAtServer();
-                    activity.updateSyncStatus(updateSuccess);
+                    activity.updateSyncStatus(updateSuccess && !HitsPerClubController.isSessionOpen());
                     try {
                         Thread.sleep(10000);
                     } catch (InterruptedException e) {
@@ -71,10 +68,6 @@ public class ClientServerSynchronizer implements RestCallbackListener {
             }
         });
         cycle.start();
-    }
-
-    public boolean isHitListSynchronized() {
-        return (0 == HitsPerClubController.getHistoryFileNames().size());
     }
 
     public CallbackResult writeHitsList(LocalDateTime sessionDate, List<Hits> hits, String fileName) {

@@ -2,7 +2,6 @@ package de.easygolfstats.file;
 
 import androidx.annotation.WorkerThread;
 
-//import org.threeten.bp.LocalDate;
 import org.threeten.bp.LocalDateTime;
 import org.threeten.bp.format.DateTimeFormatter;
 
@@ -43,16 +42,21 @@ public class HitsPerClubController {
         CsvFile.createDirectory(baseDirectory, dataDirectory);
     }
 
+    public static boolean activeFileExists() {
+        return CsvFile.fileExists(fileDirectory, HITS_FILENAME_ACTIVE + FILE_SUFFIX);
+    }
+
+    public static void beginNewSession() {
+        finishStatistic();
+        initializeFiles();
+    }
+
     public static void initializeFiles() {
         BagController.initClubList(fileDirectory);
-        if (!isStatisticOpen()) {
+        if (!activeFileExists()) {
             ArrayList<Club> clubs = BagController.getClubListSorted();
             initHitFile(clubs);
         }
-    }
-
-    public static boolean isStatisticOpen () {
-        return CsvFile.fileExists(fileDirectory, HITS_FILENAME_ACTIVE + FILE_SUFFIX);
     }
 
     public static String finishStatistic () {
@@ -73,6 +77,24 @@ public class HitsPerClubController {
         catch (Exception e) {
             return e.getMessage();
         }
+    }
+
+    public static boolean isSessionOpen () {
+        if (null == hitMap || hitMap.isEmpty()) {
+            return false;
+        }
+
+        Iterator<ArrayList<HitsPerClub>> itOverAll = hitMap.values().iterator();
+        while (itOverAll.hasNext()) {
+            Iterator<HitsPerClub> itPerClub = itOverAll.next().iterator();
+            while (itPerClub.hasNext()) {
+                HitsPerClub hitsPerClub = itPerClub.next();
+                if (hitsPerClub.getHitsOverAll() > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static void setHitsPerClubAndCat(HitCategory category, Club club, HitsPerClub hitsPerClub) {
@@ -263,9 +285,6 @@ public class HitsPerClubController {
         dateAsString = dateAsString.substring(dateAsString.indexOf(HITS_FILENAME_FINISHED) + HITS_FILENAME_FINISHED.length());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss-n");
-
-        LocalDateTime parsedDate = LocalDateTime.from(formatter.parse(dateAsString));
-
-        return parsedDate;
+        return LocalDateTime.from(formatter.parse(dateAsString));
     }
 }

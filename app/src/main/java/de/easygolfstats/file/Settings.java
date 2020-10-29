@@ -2,7 +2,6 @@ package de.easygolfstats.file;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +42,6 @@ public class Settings {
     }
 
     private void initPropertyFile() {
-
         properties.setProperty("protocol", "http");
         properties.setProperty("address", "84.44.128.8");
         properties.setProperty("port", "9090");
@@ -70,5 +68,4 @@ public class Settings {
             e.printStackTrace();
         }
     }
-
 }

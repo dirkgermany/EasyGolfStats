@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioGroup;
 import android.widget.Switch;
@@ -47,18 +48,21 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     private RecyclerView rvHitsPerClub;
     ClientServerSynchronizer synchronizer;
 
-    private String fileDirectory;
     private Logger logger;
     private int multiplier = 1;
 
     public void newPeriod(View view) {
         logger.finest("newPeriod", "NEW Button was clicked");
 
+        Button newButton = findViewById(R.id.buttonNew);
+        newButton.setTextColor(Color.parseColor("#DDD7D7"));
+        newButton.setEnabled(false);
+
+
         hitsPerClubList.clear();
         rvHitsPerClub.getAdapter().notifyDataSetChanged();
 
-        HitsPerClubController.finishStatistic();
-        HitsPerClubController.initializeFiles();
+        HitsPerClubController.beginNewSession();
         hitsPerClubList = HitsPerClubController.copyHitsPerClubFromFile(hitsPerClubList);
     }
 
@@ -74,13 +78,13 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     }
 
     private void switchSyncCheckBox(boolean isSynchronized) {
-        final CheckBox hitsSynchronized = findViewById(R.id.checkBoxHitsSynchron);
-        hitsSynchronized.setChecked(isSynchronized);
-        
-        final Button newButton = findViewById(R.id.buttonNew);
+        CheckBox hitsSynchronized = findViewById(R.id.checkBoxHitsSynchron);
+        Button newButton = findViewById(R.id.buttonNew);
         if (isSynchronized) {
-            newButton.setTextColor("#DDD7D7");
+            newButton.setTextColor(Color.parseColor("#DDD7D7"));
+            newButton.setEnabled(false);
         }
+        hitsSynchronized.setChecked(isSynchronized);
     }
 
     public void revert(View view) {
@@ -99,12 +103,13 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     @Override
     public void itemClicked(View view, int listIndex) {
         int viewId = view.getId();
-        if (viewId == R.id.itemClubName)
+        if (viewId == R.id.itemClubName) {
             return;
         }
-    
-        final Button newButton = findViewById(R.id.buttonNew);
-        newButton.setTextColor("#ecba04");
+
+        Button newButton = findViewById(R.id.buttonNew);
+        newButton.setTextColor(Color.parseColor("#ecba04"));
+        newButton.setEnabled(true);
 
         RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioGroupHitCategory);
         HitCategory hitCategory = null;
@@ -122,32 +127,9 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
             hitCategory = HitCategory.BUNKER;
         }
 
-        HitsPerClub hitsPerClubOverAll = hitsPerClubList.get(listIndex);
-        Club club = BagController.getClubByName(hitsPerClubOverAll.getClubName());
+        Club club = BagController.getClubByName(hitsPerClubList.get(listIndex).getClubName());
+        HitsPerClub hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(hitCategory, club);
 
-        HitsPerClub hitsPerClubAndCat = null;
-        hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(hitCategory, club);
-        
-/**
-        switch (hitCategory) {
-            case PITCH:
-                hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(HitCategory.PITCH, club);
-                break;
-            case CHIP:
-                hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(HitCategory.CHIP, club);
-                break;
-            case BUNKER:
-                hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(HitCategory.BUNKER, club);
-                break;
-
-            case REGULAR:
-            default:
-                hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(HitCategory.REGULAR, club);
-                break;
-
-        }
-*/
-    
         switch (viewId) {
             case R.id.button_positive:
                 hitsPerClubAndCat.incrementHitsGood(1 * multiplier);
@@ -188,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     @Override
     public void onResume() {
         super.onResume();
-        logger.fine("onResume", "Anwendung wurde in den Vordergrund geholt");
+        logger.fine("onResume", "Anwendung wurde aus passivem in aktiven Zustand versetzt");
     }
 
     @SuppressLint("WrongThread")
@@ -213,22 +195,16 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
         actionBar.setLogo(R.drawable.titel_egs_simple);
 
         // Search instance of RecyclerView
-        rvHitsPerClub = (RecyclerView) findViewById(R.id.recyclerViewRefRoutes);
-
-        String basePath = getExternalFilesDir(null).getAbsolutePath();
-
-        // Initialize reference routes list
-        fileDirectory = basePath + "/data";
-
+        rvHitsPerClub = (RecyclerView) findViewById(R.id.recyclerViewHits);
         AndroidThreeTen.init(this);
 
+        String basePath = getExternalFilesDir(null).getAbsolutePath();
         Logger.setBasePath(basePath);
         logger = Logger.createLogger("MainActivity");
 
         logger.finest("onCreate", "-->       New Instance        <--");
         logger.info("onCreate", "EasyGolfStats App wird initialisiert");
         logger.config("onCreate", "Basisverzeichnis: " + basePath);
-        logger.config("onCreate", "Datenverzeichnis: " + fileDirectory);
 
         HitsPerClubController.initDataDirectory(basePath, "data");
         HitsPerClubController.initializeFiles();
