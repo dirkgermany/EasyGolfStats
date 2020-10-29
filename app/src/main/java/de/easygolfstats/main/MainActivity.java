@@ -60,26 +60,6 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
         HitsPerClubController.finishStatistic();
         HitsPerClubController.initializeFiles();
         hitsPerClubList = HitsPerClubController.copyHitsPerClubFromFile(hitsPerClubList);
-
-
-        /*       final MainActivity activity = this;
-        Thread newThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName("syncHitsThread");
-                final boolean updateSuccess = synchronizer.updateAtServer();
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        activity.switchSyncCheckBox(updateSuccess);
-                    }
-                });
-            }
-        });
-
-        newThread.start();
-*/
     }
 
     @Override
@@ -96,6 +76,11 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     private void switchSyncCheckBox(boolean isSynchronized) {
         final CheckBox hitsSynchronized = findViewById(R.id.checkBoxHitsSynchron);
         hitsSynchronized.setChecked(isSynchronized);
+        
+        final Button newButton = findViewById(R.id.buttonNew);
+        if (isSynchronized) {
+            newButton.setTextColor("#DDD7D7");
+        }
     }
 
     public void revert(View view) {
@@ -114,9 +99,12 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
     @Override
     public void itemClicked(View view, int listIndex) {
         int viewId = view.getId();
-        if (viewId == R.id.itemClubName) {//|| viewId == R.id.itemCountText) {
+        if (viewId == R.id.itemClubName)
             return;
         }
+    
+        final Button newButton = findViewById(R.id.buttonNew);
+        newButton.setTextColor("#ecba04");
 
         RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioGroupHitCategory);
         HitCategory hitCategory = null;
@@ -138,7 +126,9 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
         Club club = BagController.getClubByName(hitsPerClubOverAll.getClubName());
 
         HitsPerClub hitsPerClubAndCat = null;
-
+        hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(hitCategory, club);
+        
+/**
         switch (hitCategory) {
             case PITCH:
                 hitsPerClubAndCat = HitsPerClubController.getHitsPerClubAndCat(HitCategory.PITCH, club);
@@ -156,7 +146,8 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
                 break;
 
         }
-
+*/
+    
         switch (viewId) {
             case R.id.button_positive:
                 hitsPerClubAndCat.incrementHitsGood(1 * multiplier);
@@ -262,8 +253,5 @@ public class MainActivity extends AppCompatActivity implements HitsPerClubAdapte
         synchronizer.getClubs();
 
         synchronizer.cyclicSynchronize(this);
-//        CheckBox hitsSynchronized = (CheckBox) findViewById(R.id.checkBoxHitsSynchron);
-//        hitsSynchronized.setChecked(synchronizer.isHitListSynchronized());
-
     }
 }
