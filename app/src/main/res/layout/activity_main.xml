@@ -33,7 +33,7 @@
         android:backgroundTint="#787272"
         android:foregroundTint="#673AB7"
         android:onClick="newPeriod"
-        android:text="New Stat"
+        android:text="Finish"
         android:textColor="#ecba04"
         android:textStyle="normal"
         app:layout_constraintBottom_toBottomOf="parent"
